@@ -437,8 +437,16 @@ static void test_simd_support(void)
 
     /* Scalar must always be set */
     ASSERT(caps & 0x01, "SCALAR flag set");
-    /* Phase 1: no SIMD yet */
-    ASSERT(caps == 0x01, "only SCALAR in Phase 1");
+
+    /* Phase 2: platform-specific SIMD detection */
+#if defined(__x86_64__) || defined(_M_X64)
+    printf("  SIMD caps: 0x%02x (AVX2=%s, AVX512=%s)\n",
+           caps,
+           (caps & 0x02) ? "yes" : "no",
+           (caps & 0x04) ? "yes" : "no");
+#elif defined(__aarch64__) || defined(_M_ARM64)
+    ASSERT(caps & 0x08, "NEON flag set on AArch64");
+#endif
 }
 
 /* ── Test 15: terncore_version ───────────────────────────────────── */

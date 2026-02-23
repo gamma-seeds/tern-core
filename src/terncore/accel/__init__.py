@@ -55,6 +55,20 @@ def _setup_signatures(lib: ctypes.CDLL) -> None:
     lib.get_simd_support.argtypes = []
     lib.get_simd_support.restype = ctypes.c_uint32
 
+    # ternary_matmul_f32_simd — SIMD-accelerated dispatch (Patent 38)
+    lib.ternary_matmul_f32_simd.argtypes = [
+        ctypes.POINTER(ctypes.c_uint8),  # packed_weights [M*N/4]
+        ctypes.POINTER(ctypes.c_float),  # input          [B x N]
+        ctypes.POINTER(ctypes.c_float),  # output         [B x M]
+        ctypes.POINTER(ctypes.c_uint8),  # bitmap         (or NULL)
+        ctypes.c_float,                  # alpha
+        ctypes.POINTER(ctypes.c_float),  # bias           (or NULL)
+        ctypes.c_int,                    # M
+        ctypes.c_int,                    # N
+        ctypes.c_int,                    # B
+    ]
+    lib.ternary_matmul_f32_simd.restype = ctypes.c_int
+
     # terncore_version — library version string
     lib.terncore_version.argtypes = []
     lib.terncore_version.restype = ctypes.c_char_p
@@ -210,8 +224,8 @@ class TernaryLinearAccel(TernaryLinear):
         else:
             bias_ptr = None
 
-        # Call C kernel (Patent 38: dispatch to best path)
-        rc = _lib.ternary_matmul_f32(
+        # Call C kernel with SIMD dispatch (Patent 38: best available path)
+        rc = _lib.ternary_matmul_f32_simd(
             self._packed_weights_np.ctypes.data_as(
                 ctypes.POINTER(ctypes.c_uint8)
             ),

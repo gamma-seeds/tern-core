@@ -389,3 +389,83 @@ class TestAccelIntegration:
         assert result.output.shape == (4, 16)
         assert result.latency_ms > 0
         assert result.deterministic is True
+
+
+# ═══════════════════════════════════════════════════════════════
+# SIMD acceleration tests (Phase 2)
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestSIMDAcceleration:
+    """Tests for SIMD-accelerated dispatch (AVX2 / NEON). Patent 38."""
+
+    @pytest.mark.skipif(not is_accelerated(), reason="C library not available")
+    def test_simd_detection_reports_capability(self):
+        """SIMD detection reports at least one hardware capability."""
+        import platform
+
+        info = get_acceleration_info()
+        simd = info["simd_support"]
+
+        # Scalar must always be set
+        assert simd["scalar"] is True
+
+        # Platform-aware: expect AVX2 on x86_64, NEON on AArch64
+        machine = platform.machine().lower()
+        if machine in ("x86_64", "amd64"):
+            assert simd["avx2"] is True, "AVX2 expected on x86_64"
+        elif machine in ("aarch64", "arm64"):
+            assert simd["neon"] is True, "NEON expected on AArch64"
+
+    @pytest.mark.skipif(not is_accelerated(), reason="C library not available")
+    def test_simd_matches_scalar_small(self):
+        """SIMD dispatch matches TernaryLinear on small matrix (64x32)."""
+        torch.manual_seed(100)
+        base = TernaryLinear(32, 64)
+        accel = TernaryLinearAccel.from_ternary_linear(base)
+
+        base.eval()
+        accel.eval()
+
+        x = torch.randn(4, 32)
+        y_base = base(x)
+        y_accel = accel(x)
+
+        assert torch.allclose(y_base, y_accel, atol=1e-5, rtol=1e-5), (
+            f"Max diff: {(y_base - y_accel).abs().max().item()}"
+        )
+
+    @pytest.mark.skipif(not is_accelerated(), reason="C library not available")
+    def test_simd_matches_scalar_large(self):
+        """SIMD dispatch matches TernaryLinear on large matrix (1024x512)."""
+        torch.manual_seed(200)
+        base = TernaryLinear(512, 1024)
+        accel = TernaryLinearAccel.from_ternary_linear(base)
+
+        base.eval()
+        accel.eval()
+
+        x = torch.randn(8, 512)
+        y_base = base(x)
+        y_accel = accel(x)
+
+        assert torch.allclose(y_base, y_accel, atol=1e-4, rtol=1e-4), (
+            f"Max diff: {(y_base - y_accel).abs().max().item()}"
+        )
+
+    @pytest.mark.skipif(not is_accelerated(), reason="C library not available")
+    def test_simd_deterministic(self):
+        """SIMD dispatch produces bit-identical output across 100 runs. Patent 36."""
+        torch.manual_seed(300)
+        layer = TernaryLinearAccel(128, 64)
+        layer.eval()
+
+        x = torch.randn(4, 128)
+        reference = layer(x)
+
+        for i in range(99):
+            y = layer(x)
+            assert torch.equal(reference, y), (
+                f"Run {i + 2}: not bit-identical, max diff="
+                f"{(reference - y).abs().max().item()}"
+            )

@@ -42,6 +42,46 @@
 #define TRIT_RESERVED 0x03   /* reserved — must not appear */
 #define TRIT_MASK     0x03   /* 2-bit mask for one trit  */
 
+/* ─────────────────────────────────────────────────────────────────────
+ * decode_byte_f32 — Decode one packed byte (4 trits) and accumulate
+ *
+ * Extracts 4 trit values from a single uint8 byte and applies the
+ * corresponding add/subtract/skip to the accumulator.  Fully
+ * unrolled for minimum overhead per weight.
+ *
+ * Defined in the header (static inline) so that SIMD kernel files
+ * can reuse it for tail processing.
+ *
+ * Parameters:
+ *   byte   packed byte containing 4 trits
+ *   x      pointer to 4 consecutive float32 input values
+ *   acc    pointer to float32 accumulator (updated in-place)
+ * ─────────────────────────────────────────────────────────────────── */
+static inline void decode_byte_f32(uint8_t byte, const float *x, float *acc)
+{
+    int t;
+
+    /* Trit 0 — bits [1:0] */
+    t = byte & TRIT_MASK;
+    if (t == TRIT_POS)      *acc += x[0];
+    else if (t == TRIT_NEG) *acc -= x[0];
+
+    /* Trit 1 — bits [3:2] */
+    t = (byte >> 2) & TRIT_MASK;
+    if (t == TRIT_POS)      *acc += x[1];
+    else if (t == TRIT_NEG) *acc -= x[1];
+
+    /* Trit 2 — bits [5:4] */
+    t = (byte >> 4) & TRIT_MASK;
+    if (t == TRIT_POS)      *acc += x[2];
+    else if (t == TRIT_NEG) *acc -= x[2];
+
+    /* Trit 3 — bits [7:6] (no mask needed for top 2 bits) */
+    t = byte >> 6;
+    if (t == TRIT_POS)      *acc += x[3];
+    else if (t == TRIT_NEG) *acc -= x[3];
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -6,18 +6,25 @@
  *
  *   1. ternary_matmul_f32()      — Primary entry point: selects the
  *                                  best scalar kernel automatically.
- *   2. ternary_matmul_f32_simd() — SIMD-accelerated entry point
- *                                  (Phase 2 stub, falls back to scalar).
- *   3. get_simd_support()        — Runtime SIMD feature detection.
+ *   2. ternary_matmul_f32_simd() — SIMD-accelerated entry point:
+ *                                  dispatches to AVX2/NEON for dense
+ *                                  path, scalar for sparse path.
+ *   3. get_simd_support()        — Runtime SIMD feature detection
+ *                                  via CPUID (x86) or compile-time
+ *                                  check (AArch64).
  *   4. terncore_version()        — Library version string.
  *
  * All individual kernel functions (tern_matvec_f32, tern_packed_*,
- * tern_sparse64_*) are also available as exported symbols for direct
- * use from Python when fine-grained control is needed.
+ * tern_sparse64_*, tern_packed_*_avx2, tern_packed_*_neon) are also
+ * available as exported symbols for direct use from Python.
  *
  * Build (shared library):
- *   macOS:  cc -std=c11 -O2 -shared -fPIC -o libterncore.dylib *.c
- *   Linux:  cc -std=c11 -O2 -shared -fPIC -o libterncore.so *.c
+ *   Use the Makefile:  make          (auto-detects platform)
+ *   Or manually:
+ *     macOS x86:  cc -std=c11 -O2 -shared -fPIC -mavx2 \
+ *                    -o libterncore.dylib *.c
+ *     Linux ARM:  cc -std=c11 -O2 -shared -fPIC \
+ *                    -o libterncore.so *.c
  *
  * Patent 36: Deterministic execution.
  * Patent 38: Configurable precision → dual-path dispatch.
@@ -25,17 +32,16 @@
  * Copyright (c) 2025 Synapticode Co., Ltd. All rights reserved.
  */
 
-#include "sparse_skip.h"   /* includes ternary_packed.h → ternary_matmul.h */
+#include "sparse_skip.h"      /* includes ternary_packed.h → ternary_matmul.h */
+#include "ternary_simd.h"     /* TERN_SIMD_*, AVX2/NEON kernel declarations   */
 
-/* ── SIMD capability flags ────────────────────────────────────────── */
+/* ── Cached SIMD capabilities ────────────────────────────────────── */
 
-#define TERN_SIMD_SCALAR  (1u << 0)   /* Scalar C (always available) */
-#define TERN_SIMD_AVX2    (1u << 1)   /* x86 AVX2 (Phase 2) */
-#define TERN_SIMD_AVX512  (1u << 2)   /* x86 AVX-512 (Phase 2) */
-#define TERN_SIMD_NEON    (1u << 3)   /* ARM NEON (Phase 2) */
+static uint32_t cached_caps  = 0;
+static int      caps_checked = 0;
 
 /* ══════════════════════════════════════════════════════════════════════
- * ternary_matmul_f32 — Primary dispatch entry point
+ * ternary_matmul_f32 — Primary scalar dispatch entry point
  *
  *   output[b,i] = alpha * sum_j(W[i,j] * input[b,j]) + bias[i]
  *
@@ -43,8 +49,6 @@
  *
  *   bitmap != NULL  →  sparse64 packed kernel (bit-scan skip)
  *   bitmap == NULL  →  dense packed kernel (byte-level skip)
- *
- * Phase 2 will add SIMD kernel selection via get_simd_support().
  *
  * Parameters:
  *   packed_weights  [M * N/4] uint8_t, 2-bit packed ternary weights
@@ -84,11 +88,19 @@ int ternary_matmul_f32(
 /* ══════════════════════════════════════════════════════════════════════
  * ternary_matmul_f32_simd — SIMD-accelerated dispatch
  *
- * Phase 2 entry point.  When SIMD kernels are available, this will
- * dispatch to AVX2/AVX-512/NEON implementations.  Currently falls
- * back to the scalar dispatch in ternary_matmul_f32().
+ * For the dense packed path (bitmap == NULL), dispatches to the best
+ * available SIMD kernel:
+ *
+ *   AVX2  (x86_64)  →  tern_packed_matmul_f32_avx2()
+ *   NEON  (AArch64)  →  tern_packed_matmul_f32_neon()
+ *   fallback         →  tern_packed_matmul_f32()  (scalar)
+ *
+ * For the sparse path (bitmap != NULL), falls back to the scalar
+ * sparse64 kernel (SIMD sparse kernels are a future optimisation).
  *
  * Same parameters and return values as ternary_matmul_f32().
+ *
+ * Patent 38: Configurable precision — runtime SIMD dispatch.
  * ═════════════════════════════════════════════════════════════════════*/
 int ternary_matmul_f32_simd(
     const uint8_t *packed_weights,
@@ -99,15 +111,32 @@ int ternary_matmul_f32_simd(
     const float   *bias,
     int M, int N, int B)
 {
-    /*
-     * Phase 2 will add:
-     *   uint32_t caps = get_simd_support();
-     *   if (caps & TERN_SIMD_AVX512) return avx512_dispatch(...);
-     *   if (caps & TERN_SIMD_AVX2)   return avx2_dispatch(...);
-     *   if (caps & TERN_SIMD_NEON)   return neon_dispatch(...);
-     */
-    return ternary_matmul_f32(
-        packed_weights, input, output, bitmap, alpha, bias, M, N, B);
+    /* Sparse path: SIMD sparse kernels not yet implemented */
+    if (bitmap != NULL) {
+        return tern_sparse64_packed_matmul_f32(
+            packed_weights, input, output, bitmap, M, N, B, alpha, bias);
+    }
+
+    /* Dense path: dispatch to best available SIMD kernel */
+    uint32_t caps = get_simd_support();
+
+#if defined(__x86_64__) || defined(_M_X64)
+    if (caps & TERN_SIMD_AVX2) {
+        return tern_packed_matmul_f32_avx2(
+            packed_weights, input, output, M, N, B, alpha, bias);
+    }
+#endif
+
+#if defined(__aarch64__) || defined(_M_ARM64)
+    if (caps & TERN_SIMD_NEON) {
+        return tern_packed_matmul_f32_neon(
+            packed_weights, input, output, M, N, B, alpha, bias);
+    }
+#endif
+
+    /* Scalar fallback */
+    return tern_packed_matmul_f32(
+        packed_weights, input, output, M, N, B, alpha, bias);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -115,29 +144,48 @@ int ternary_matmul_f32_simd(
  *
  * Returns a bitmask of available instruction sets:
  *   TERN_SIMD_SCALAR  (0x01) — always set
- *   TERN_SIMD_AVX2    (0x02) — Phase 2: CPUID check
- *   TERN_SIMD_AVX512  (0x04) — Phase 2: CPUID check
- *   TERN_SIMD_NEON    (0x08) — Phase 2: auxiliary vector check
+ *   TERN_SIMD_AVX2    (0x02) — x86 CPUID leaf 7, EBX bit 5
+ *   TERN_SIMD_AVX512  (0x04) — x86 CPUID leaf 7, EBX bit 16
+ *   TERN_SIMD_NEON    (0x08) — always set on AArch64
+ *
+ * Result is cached after the first call (CPUID is only executed once).
  *
  * Patent 38: Configurable precision — runtime capability detection.
  * ═════════════════════════════════════════════════════════════════════*/
 uint32_t get_simd_support(void)
 {
+    if (caps_checked) return cached_caps;
+
     uint32_t support = TERN_SIMD_SCALAR;
 
-    /*
-     * Phase 2 will add runtime detection:
-     *
-     * #if defined(__x86_64__) || defined(_M_X64)
-     *     uint32_t eax, ebx, ecx, edx;
-     *     __cpuid_count(7, 0, eax, ebx, ecx, edx);
-     *     if (ebx & (1u << 5))  support |= TERN_SIMD_AVX2;
-     *     if (ebx & (1u << 16)) support |= TERN_SIMD_AVX512;
-     * #elif defined(__aarch64__) || defined(_M_ARM64)
-     *     support |= TERN_SIMD_NEON;   // Always available on AArch64
-     * #endif
-     */
+#if defined(__x86_64__) || defined(_M_X64)
+    {
+        uint32_t eax, ebx, ecx, edx;
 
+#if defined(__GNUC__) || defined(__clang__)
+        __asm__ __volatile__(
+            "cpuid"
+            : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
+            : "a"(7), "c"(0)
+        );
+#elif defined(_MSC_VER)
+        int cpuinfo[4];
+        __cpuidex(cpuinfo, 7, 0);
+        ebx = (uint32_t)cpuinfo[1];
+#else
+        ebx = 0;
+#endif
+
+        if (ebx & (1u << 5))   support |= TERN_SIMD_AVX2;
+        if (ebx & (1u << 16))  support |= TERN_SIMD_AVX512;
+    }
+#elif defined(__aarch64__) || defined(_M_ARM64)
+    /* NEON is always available on AArch64 */
+    support |= TERN_SIMD_NEON;
+#endif
+
+    cached_caps  = support;
+    caps_checked = 1;
     return support;
 }
 
