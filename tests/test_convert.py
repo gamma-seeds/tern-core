@@ -460,3 +460,95 @@ class TestCLI:
             text=True,
         )
         assert result.returncode != 0
+
+
+# ═══════════════════════════════════════════════════════════════
+# Conv1D support tests
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestConv1DSupport:
+    """Tests for HuggingFace Conv1D handling (GPT-2 family)."""
+
+    @pytest.fixture
+    def conv1d_available(self):
+        """Check if transformers Conv1D is available."""
+        try:
+            from transformers.pytorch_utils import Conv1D
+            return Conv1D
+        except ImportError:
+            pytest.skip("transformers not installed")
+
+    def test_conv1d_detected(self, conv1d_available):
+        """Conv1D layers are detected as weight layers."""
+        from terncore.convert import _is_weight_layer
+        Conv1D = conv1d_available
+
+        linear = nn.Linear(32, 64)
+        conv1d = Conv1D(64, 32)  # Conv1D(nf=out, nx=in): weight (in, out)
+        relu = nn.ReLU()
+
+        assert _is_weight_layer(linear) is True
+        assert _is_weight_layer(conv1d) is True
+        assert _is_weight_layer(relu) is False
+
+    def test_conv1d_weight_transposed(self, conv1d_available):
+        """Conv1D weights are transposed to (out, in) for packing."""
+        from terncore.convert import _get_weight_and_shape
+        Conv1D = conv1d_available
+
+        # Conv1D stores weights as (in_features=32, out_features=64)
+        conv1d = Conv1D(64, 32)
+        weight, shape = _get_weight_and_shape(conv1d)
+        # After transpose: (out=64, in=32)
+        assert shape == [64, 32]
+        assert weight.shape == (64, 32)
+
+    def test_conv1d_model_conversion(self, conv1d_available):
+        """Model with Conv1D layers converts successfully."""
+        Conv1D = conv1d_available
+
+        class GPT2Like(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.c_attn = Conv1D(96, 32)   # 3 * 32 heads
+                self.c_proj = Conv1D(32, 32)
+                self.c_fc = Conv1D(128, 32)    # MLP
+                self.c_fc2 = Conv1D(32, 128)   # MLP
+                self.lm_head = nn.Linear(32, 16, bias=False)
+
+            def forward(self, x):
+                return x
+
+        torch.manual_seed(2001)
+        model = GPT2Like()
+
+        with tempfile.NamedTemporaryFile(suffix=".tern-model", delete=False) as f:
+            path = f.name
+
+        try:
+            converter = TernaryConverter(
+                model_id="test/gpt2like",
+                output_path=path,
+                threshold=0.7,
+            )
+            stats = converter.convert(verbose=False, model=model)
+
+            # 5 total layers: 4 Conv1D + 1 nn.Linear
+            assert stats["total_layers"] == 5
+            # lm_head protected (matches *lm_head* pattern), 4 Conv1D ternary
+            assert stats["ternary_layers"] == 4
+            assert stats["protected_layers"] == 1
+
+            # Verify file integrity
+            assert converter.verify(verbose=False)
+
+            # Read back and check shapes are (out, in)
+            reader = TernModelReader(path)
+            for entry in reader.manifest["layers"]:
+                if entry["name"] == "c_attn":
+                    assert entry["shape"] == [96, 32]  # transposed
+                elif entry["name"] == "c_proj":
+                    assert entry["shape"] == [32, 32]
+        finally:
+            Path(path).unlink(missing_ok=True)

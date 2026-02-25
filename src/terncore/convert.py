@@ -38,6 +38,46 @@ from terncore.sparse import pack_ternary_weights
 from terncore.tern_model import TernModelWriter, TernModelReader
 
 
+def _get_conv1d_class():
+    """Lazily import HuggingFace Conv1D if available.
+
+    GPT-2 family models use transformers.pytorch_utils.Conv1D instead of
+    nn.Linear for attention/MLP layers. Conv1D stores weights as
+    (in_features, out_features) — transposed vs nn.Linear's (out_features,
+    in_features). Functionally identical: both compute x @ W + b.
+    """
+    try:
+        from transformers.pytorch_utils import Conv1D
+        return Conv1D
+    except ImportError:
+        return None
+
+
+def _is_weight_layer(module: nn.Module) -> bool:
+    """Check if module is nn.Linear or HuggingFace Conv1D."""
+    if isinstance(module, nn.Linear):
+        return True
+    Conv1D = _get_conv1d_class()
+    if Conv1D is not None and isinstance(module, Conv1D):
+        return True
+    return False
+
+
+def _get_weight_and_shape(module: nn.Module) -> tuple[torch.Tensor, list[int]]:
+    """Extract weight tensor in (out_features, in_features) layout.
+
+    Conv1D stores weights as (in_features, out_features), so we transpose
+    to match nn.Linear's convention for consistent packing.
+    """
+    Conv1D = _get_conv1d_class()
+    if Conv1D is not None and isinstance(module, Conv1D):
+        # Conv1D: weight is (in_features, out_features) — transpose it
+        weight = module.weight.data.t().contiguous()
+    else:
+        weight = module.weight.data
+    return weight, list(weight.shape)
+
+
 # Default protection patterns — proven from Days 2-5.
 # These layers are catastrophic to quantise across all transformer architectures.
 DEFAULT_PROTECTION_PATTERNS = [
@@ -138,7 +178,7 @@ class TernaryConverter:
         all_linear = self._find_linear_layers(model)
         ternary_names = [n for n in all_linear if n not in protection_list]
 
-        _log(f"  Total Linear layers: {len(all_linear)}")
+        _log(f"  Total weight layers: {len(all_linear)}")
         _log(f"  Protected: {len(protection_list)} layers")
         _log(f"  Ternary:   {len(ternary_names)} layers")
 
@@ -231,10 +271,10 @@ class TernaryConverter:
         return model
 
     def _find_linear_layers(self, model: nn.Module) -> list[str]:
-        """Find all nn.Linear layer names in the model."""
+        """Find all weight layer names (nn.Linear + Conv1D) in the model."""
         return [
             name for name, module in model.named_modules()
-            if isinstance(module, nn.Linear)
+            if _is_weight_layer(module)
         ]
 
     def _build_protection_list(self, model: nn.Module) -> set[str]:
@@ -250,7 +290,7 @@ class TernaryConverter:
         """
         protected = set()
         for name, module in model.named_modules():
-            if not isinstance(module, nn.Linear):
+            if not _is_weight_layer(module):
                 continue
             name_lower = name.lower()
             for pattern in self._protection_patterns:
@@ -282,16 +322,15 @@ class TernaryConverter:
         layer_data = {}
         all_linear = [
             (name, module) for name, module in model.named_modules()
-            if isinstance(module, nn.Linear)
+            if _is_weight_layer(module)
         ]
 
         done = 0
         total = len(all_linear)
 
         for name, module in all_linear:
-            weight = module.weight.data
+            weight, shape = _get_weight_and_shape(module)
             bias = module.bias.data if module.bias is not None else None
-            shape = list(weight.shape)
             num_params = weight.numel()
 
             if name in protection_list:

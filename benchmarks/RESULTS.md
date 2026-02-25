@@ -812,7 +812,7 @@ cd src/terncore/csrc && make clean && make && cd ../../..
 # Run C tests (53 tests)
 cd src/terncore/csrc && make test && cd ../../..
 
-# Run Python tests (163 tests + 3 skipped)
+# Run Python tests (166 tests + 3 skipped)
 pytest tests/ -v
 
 # Run microbenchmark (isolated matmul)
@@ -853,7 +853,7 @@ python benchmarks/bench_tinyllama.py
 *PackedTernaryLinear benchmark generated 2026-02-25 on the same system.*
 *Sparsity bitmap zero-skip benchmark generated 2026-02-25 on the same system.*
 *Conversion pipeline benchmark generated 2026-02-25 on the same system.*
-*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`, `benchmarks/analyse_weights.py`, `benchmarks/analyse_ste_weights.py`, `benchmarks/quick_probe.py`, `benchmarks/bench_day6.py`, `benchmarks/bench_day7_roundtrip.py`, `benchmarks/bench_day8_packing.py`, `benchmarks/bench_day9_sparsity.py`, `benchmarks/bench_day10_pipeline.py`*
+*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`, `benchmarks/analyse_weights.py`, `benchmarks/analyse_ste_weights.py`, `benchmarks/quick_probe.py`, `benchmarks/bench_day6.py`, `benchmarks/bench_day7_roundtrip.py`, `benchmarks/bench_day8_packing.py`, `benchmarks/bench_day9_sparsity.py`, `benchmarks/bench_day10_pipeline.py`, `benchmarks/bench_day11_multi_model.py`*
 
 ---
 
@@ -1404,3 +1404,108 @@ Total test suite: **163 passed**, 3 skipped (TinyLlama download-dependent).
 | Patent 12 | Binary-to-ternary pipeline | CLI: `python -m terncore.convert MODEL --output FILE` |
 | Patent 6 | Model format | Output is v2 .tern-model with manifest, CRC32 footer |
 | Patent 8 | Serialisation integrity | `--verify` flag validates output via `TernModelReader.verify()` |
+
+---
+
+## Day 11: Multi-Model Generalisation — 5 Architectures
+
+### Overview
+
+Proves tern-convert generalises across architecturally distinct transformer models.
+Four new models tested alongside TinyLlama-1.1B, spanning decoder-only, encoder-only,
+and distilled architectures. All models converted with default protection patterns and
+threshold 0.7. No model-specific code required.
+
+Key Day 11 fix: added support for HuggingFace `Conv1D` layers (used by GPT-2 family
+instead of `nn.Linear`). Conv1D stores weights as `(in_features, out_features)` —
+transposed vs `nn.Linear`'s `(out_features, in_features)`. The converter now detects
+both layer types and normalises weights before packing.
+
+### Compression Results
+
+| Model | Params | Layers | Ternary | Protected | File Size | Compression | Sparsity | Time |
+|-------|--------|--------|---------|-----------|-----------|-------------|----------|------|
+| TinyLlama-1.1B | 1,034M | 155 | 154 | 1 | 471.6 MB | 8.4x | 43.4% | 212.7s |
+| GPT-2 (124M) | 124M | 49 | 48 | 1 | 104.3 MB | 4.55x | 44.9% | 14.9s |
+| GPT-2-medium (355M) | 355M | 97 | 96 | 1 | 207.0 MB | 6.54x | 43.6% | 52.4s |
+| BERT-base (110M) | 109M | 73 | 73 | 0 | 30.9 MB | 13.5x | 43.2% | 14.7s |
+| DistilGPT-2 (82M) | 82M | 25 | 24 | 1 | 89.0 MB | 3.51x | 45.9% | 7.5s |
+
+### Quality Impact (512-token PPL, WikiText-2)
+
+| Model | FP32 PPL | Ternary PPL | Ratio | Notes |
+|-------|----------|-------------|-------|-------|
+| TinyLlama-1.1B | 7.19 | 130,127 | 18,098x | Naive, no STE |
+| GPT-2 (124M) | 28.88 | 384,614 | 13,318x | Naive, no STE |
+| GPT-2-medium (355M) | 20.95 | 546,737 | 26,098x | Naive, no STE |
+| BERT-base (110M) | N/A | N/A | N/A | Encoder model |
+| DistilGPT-2 (82M) | 38.96 | 270,678 | 6,948x | Naive, no STE |
+
+### GPT-2 Sensitivity Analysis (2048 tokens)
+
+49 layers tested in 157.8s. Comparison with TinyLlama:
+
+| Metric | TinyLlama-1.1B | GPT-2 (124M) |
+|--------|---------------|--------------|
+| Total layers | 155 | 49 |
+| Baseline PPL | 7.19 | 21.49 |
+| Above 2.0x baseline | 5 (3.2%) | 3 (6.1%) |
+| Below 1.1x baseline | 135 (87.1%) | 34 (69.4%) |
+| Catastrophic outliers (>100x) | 1 (down_proj) | 1 (h.0.c_proj) |
+
+**Top 3 most sensitive (GPT-2)**: `h.0.attn.c_proj` (137.7x), `h.0.attn.c_attn` (3.04x), `lm_head` (2.43x)
+**Most tolerant**: `c_proj` layers in mid/late blocks (~1.01x or below baseline)
+
+### Layer Type Distribution
+
+| Model | Architecture | Layer Types |
+|-------|-------------|-------------|
+| TinyLlama | Decoder (LLaMA) | q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj, lm_head |
+| GPT-2 | Decoder (GPT) | c_attn, c_proj, c_fc, lm_head (Conv1D) |
+| GPT-2-medium | Decoder (GPT) | c_attn, c_proj, c_fc, lm_head (Conv1D) |
+| BERT-base | Encoder | query, key, value, dense (nn.Linear) |
+| DistilGPT-2 | Distilled decoder | c_attn, c_proj, c_fc, lm_head (Conv1D) |
+
+### Key Findings
+
+1. **Catastrophic outlier pattern confirmed across architectures**: GPT-2's layer 0
+   `c_proj` at 137.7x matches TinyLlama's early `down_proj` outlier. First-block
+   attention/MLP projections are universally sensitive.
+
+2. **Output projections most tolerant**: GPT-2's bottom-5 are all `c_proj` (output
+   projection), analogous to TinyLlama's `v_proj` being most tolerant.
+
+3. **Smaller models are more sensitive**: GPT-2 has only 69.4% of layers below 1.1x
+   (vs TinyLlama's 87.1%). Less redundancy means ternary errors have more impact.
+
+4. **Sparsity is architecture-invariant**: All 5 models show 43-46% zero weights at
+   threshold 0.7, confirming the threshold-sparsity relationship holds across different
+   weight distributions.
+
+5. **Conv1D support unlocked GPT-2 family**: Without Conv1D detection, GPT-2 models
+   showed 0 ternary layers. With it: 48/49 layers converted (GPT-2), 96/97 (GPT-2-medium),
+   24/25 (DistilGPT-2).
+
+### Test Results
+
+3 new tests in `tests/test_convert.py` (Conv1D support), all passing:
+
+| Test | Verified |
+|------|----------|
+| `test_conv1d_detected` | Conv1D identified as weight layer |
+| `test_conv1d_weight_transposed` | Conv1D weights normalised to (out, in) |
+| `test_conv1d_model_conversion` | GPT-2-like model with Conv1D converts correctly |
+
+Total test suite: **166 passed**, 3 skipped.
+
+### Patent Alignment
+
+| Patent | Claim | Implementation |
+|--------|-------|---------------|
+| Patent 10 | Automated conversion | `TernaryConverter` handles nn.Linear + Conv1D |
+| Patent 11 | Architecture-agnostic protection | Same patterns work across GPT-2, BERT, LLaMA, distilled |
+| Patent 12 | Multi-architecture pipeline | 5 architectures converted with zero model-specific code |
+| Patent 4 | Progressive compression | Per-layer sensitivity confirmed on GPT-2 (compound error pattern) |
+
+*Multi-model generalisation benchmark generated 2026-02-25 on Darwin x86_64 (i9-9900K).*
+*Benchmark script: `benchmarks/bench_day11_multi_model.py`*

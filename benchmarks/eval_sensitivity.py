@@ -188,15 +188,28 @@ def measure_layer_sensitivity(
 # ═══════════════════════════════════════════════════════════════
 
 
+def _is_weight_layer(module: nn.Module) -> bool:
+    """Check if module is nn.Linear or HuggingFace Conv1D."""
+    if isinstance(module, nn.Linear):
+        return True
+    try:
+        from transformers.pytorch_utils import Conv1D
+        if isinstance(module, Conv1D):
+            return True
+    except ImportError:
+        pass
+    return False
+
+
 def enumerate_linear_layers(
     model: nn.Module, min_params: int,
-) -> list[tuple[str, nn.Linear]]:
+) -> list[tuple[str, nn.Module]]:
     """
-    Find all nn.Linear layers with at least min_params weight parameters.
+    Find all weight layers (nn.Linear + Conv1D) with at least min_params parameters.
     """
     layers = []
     for name, module in model.named_modules():
-        if isinstance(module, nn.Linear):
+        if _is_weight_layer(module):
             if module.weight.numel() >= min_params:
                 layers.append((name, module))
     return layers
@@ -287,7 +300,7 @@ def run_sensitivity_analysis(
     # ─── Enumerate layers ───────────────────────────────────
     layers_to_test = enumerate_linear_layers(model, min_params)
     all_linear = list(
-        (n, m) for n, m in model.named_modules() if isinstance(m, nn.Linear)
+        (n, m) for n, m in model.named_modules() if _is_weight_layer(m)
     )
     skipped = len(all_linear) - len(layers_to_test)
 

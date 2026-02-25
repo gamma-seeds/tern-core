@@ -25,6 +25,15 @@ from terncore.arithmetic.quantizer import TernaryQuantizer, SensitivityAnalyzer
 from terncore.arithmetic.linear import TernaryLinear, TernaryConv2d
 
 
+def _get_conv1d_class():
+    """Lazily import HuggingFace Conv1D if available."""
+    try:
+        from transformers.pytorch_utils import Conv1D
+        return Conv1D
+    except ImportError:
+        return None
+
+
 @dataclass
 class ConversionReport:
     """Report from converting a model to ternary."""
@@ -150,6 +159,24 @@ class TernaryInferenceEngine:
                 report.converted_layers += 1
                 report.ternary_params += module.weight.numel()
 
+            else:
+                # Check for HuggingFace Conv1D (used by GPT-2 family)
+                Conv1D = _get_conv1d_class()
+                if Conv1D is not None and isinstance(module, Conv1D):
+                    report.total_layers += 1
+                    report.total_params += module.weight.numel()
+
+                    if self._should_protect(name, module, report):
+                        report.skipped_layers += 1
+                        continue
+
+                    threshold = layer_thresholds.get(name, self.threshold)
+                    ternary_layer = self._convert_conv1d(module, threshold)
+                    self._replace_module(model, name, ternary_layer)
+
+                    report.converted_layers += 1
+                    report.ternary_params += module.weight.numel()
+
         # Calculate sizes
         # FP16 = 2 bytes/param, ternary = 2 bits/param = 0.25 bytes/param
         report.original_size_mb = (report.total_params * 2) / (1024 * 1024)
@@ -233,6 +260,27 @@ class TernaryInferenceEngine:
             threshold=threshold,
         )
         ternary.weight.data.copy_(module.weight.data)
+        if module.bias is not None and ternary.bias is not None:
+            ternary.bias.data.copy_(module.bias.data)
+        return ternary
+
+    @staticmethod
+    def _convert_conv1d(module, threshold: float) -> TernaryLinear:
+        """Convert HuggingFace Conv1D to TernaryLinear.
+
+        Conv1D weight is (in_features, out_features) — transposed vs nn.Linear.
+        We transpose and create a standard TernaryLinear replacement.
+        """
+        # Conv1D: weight shape is (in_features, out_features)
+        in_features, out_features = module.weight.shape
+        ternary = TernaryLinear(
+            in_features=in_features,
+            out_features=out_features,
+            bias=module.bias is not None,
+            threshold=threshold,
+        )
+        # Transpose Conv1D weight (in, out) → Linear weight (out, in)
+        ternary.weight.data.copy_(module.weight.data.t())
         if module.bias is not None and ternary.bias is not None:
             ternary.bias.data.copy_(module.bias.data)
         return ternary
