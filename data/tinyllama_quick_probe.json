@@ -1,0 +1,68 @@
+{
+  "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "threshold": 0.7,
+  "eval_tokens": 512,
+  "fp32_ppl": 7.2804,
+  "ternary_ppl": 81119.4884,
+  "gap_pct": 1114124.58,
+  "total_layers": 155,
+  "converted_layers": 154,
+  "sparsity": 0.4441,
+  "compression_ratio": 5.54,
+  "top_10_gradient_sensitivity": [
+    {
+      "name": "model.layers.2.self_attn.v_proj",
+      "fisher": 8e-06,
+      "grad_norm": 3.134539
+    },
+    {
+      "name": "model.layers.15.self_attn.v_proj",
+      "fisher": 7e-06,
+      "grad_norm": 1.188086
+    },
+    {
+      "name": "model.layers.21.self_attn.v_proj",
+      "fisher": 7e-06,
+      "grad_norm": 0.534211
+    },
+    {
+      "name": "model.layers.16.self_attn.v_proj",
+      "fisher": 7e-06,
+      "grad_norm": 1.142858
+    },
+    {
+      "name": "model.layers.7.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 1.585072
+    },
+    {
+      "name": "model.layers.1.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 4.82615
+    },
+    {
+      "name": "model.layers.14.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 1.119103
+    },
+    {
+      "name": "model.layers.20.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 0.717053
+    },
+    {
+      "name": "model.layers.19.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 0.825101
+    },
+    {
+      "name": "model.layers.13.self_attn.v_proj",
+      "fisher": 6e-06,
+      "grad_norm": 1.269511
+    }
+  ],
+  "gradient_vs_day2_overlap": 0,
+  "gradient_vs_day2_top10_match": "0/10",
+  "recommendation": "NEEDS_STE_TRAINING",
+  "total_time_s": 53.2
+}

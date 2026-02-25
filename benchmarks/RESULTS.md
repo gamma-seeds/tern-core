@@ -562,6 +562,226 @@ python benchmarks/eval_ste_training.py --steps 500 --eval-tokens 2048 --save-con
 python benchmarks/eval_ste_training.py --steps 500 --lr 5e-5 --eval-tokens 2048
 ```
 
+## Weight Analysis & Layer Taxonomy
+
+Comprehensive weight statistics extraction for all 155 Linear layers in
+**TinyLlama-1.1B-Chat-v1.0** at 5 thresholds (0.3, 0.5, 0.7, 0.9, 0.95).
+Builds a layer taxonomy by type and depth, correlates weight distribution
+properties with sensitivity, and ranks layers by ternary friendliness.
+
+Full data: `data/tinyllama_weight_analysis.json`, `data/tinyllama_layer_summary.csv`.
+
+### Layer Type Profiles (threshold=0.7)
+
+| Type | Count | Mean |W| | Std | Sparsity | Quant Error | Kurtosis | Eff Rank |
+|------|-------|---------|-----|----------|-------------|----------|----------|
+| up_proj | 22 | 0.0141 | 0.0177 | 42.7% | 0.444 | 0.44 | 205.0 |
+| down_proj | 22 | 0.0138 | 0.0175 | 42.8% | 0.447 | 1.07 | 204.4 |
+| gate_proj | 22 | 0.0161 | 0.0204 | 43.1% | 0.456 | 1.32 | 202.0 |
+| v_proj | 22 | 0.0113 | 0.0146 | 44.2% | 0.463 | 0.75 | 200.6 |
+| o_proj | 22 | 0.0119 | 0.0152 | 43.7% | 0.468 | 4.45 | 199.6 |
+| lm_head | 1 | 0.0193 | 0.0247 | 43.3% | 0.471 | 1.67 | 199.5 |
+| q_proj | 22 | 0.0192 | 0.0259 | 46.9% | 0.507 | 8.55 | 183.5 |
+| k_proj | 22 | 0.0332 | 0.0449 | 47.3% | 0.510 | 15.41 | 173.1 |
+
+### Type Homogeneity
+
+MLP layers (up_proj, down_proj, gate_proj) are **homogeneous** within type
+(QE std < 0.01, sparsity std < 0.004).  Attention layers (q_proj, k_proj,
+o_proj, v_proj) are **not** — individual layers vary significantly,
+especially k_proj (QE std=0.055) and q_proj (QE std=0.044).
+
+### Block Depth Analysis
+
+| Block Range | Avg QE | Avg Sensitivity | Layers |
+|-------------|--------|-----------------|--------|
+| 0-5 (early) | 0.481 | 1202.7x | 42 |
+| 6-10 | 0.466 | 1.39x | 35 |
+| 11-15 | 0.469 | 1.00x | 35 |
+| 16-21 (late) | 0.466 | 1.00x | 42 |
+
+Early blocks (0-5) have both higher quant error and dramatically higher
+sensitivity, driven by the outlier layer `model.layers.2.mlp.down_proj`
+(9609x sensitivity ratio).
+
+### Key Findings
+
+**1. Layer type determines ternary tolerance more than depth**
+
+Quant error ordering by type: up_proj (0.444) < down_proj (0.447) < gate_proj
+(0.456) < v_proj (0.463) < o_proj (0.468) < q_proj (0.507) < k_proj (0.510).
+MLP layers have the lowest quant error, while attention Q/K projections
+have the highest — consistent with k_proj's heavy-tailed distribution
+(kurtosis 15.41 vs up_proj's 0.44).
+
+**2. Quant error moderately predicts sensitivity (r=0.666)**
+
+Excluding the outlier down_proj layer, quant error at threshold 0.7 correlates
+moderately with brute-force sensitivity ratio (Pearson r=0.666, n=19).  This
+means quant error can serve as a cheap proxy for sensitivity analysis (no
+per-layer PPL evaluation needed), though with limited precision.
+
+**3. All 155 layers have extreme outlier weights**
+
+Every layer has weights > 5 standard deviations from the mean.  Block 0
+attention layers are worst: k_proj has a weight 97.9 std below mean,
+q_proj has 96.7 std below mean.  These outliers likely drive quantisation
+error since ternary {-1, 0, +1} × alpha cannot represent them.
+
+**4. No bimodal distributions detected**
+
+None of the 155 layers have bimodal or trimodal weight distributions.
+All are unimodal, centered near zero, with varying tail heaviness.  This
+means ternary quantisation always maps from a single Gaussian-like
+distribution — threshold tuning is the primary lever, not distribution shape.
+
+**5. Ternary friendliness ranking dominated by v_proj and o_proj**
+
+Top-10 friendliest layers are a mix of v_proj (4 layers), o_proj (4 layers),
+and gate_proj (1 layer), confirming Day 3's finding that v_proj is the optimal
+type for initial ternary conversion.
+
+## Gradient Sensitivity (Quick Probe)
+
+Universal smoke test using gradient-based sensitivity (Fisher information
+approximation) vs Day 2 brute-force per-layer PPL evaluation.  Runs in
+<2 minutes.
+
+Full data: `data/tinyllama_quick_probe.json`.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| FP32 PPL (512 tokens) | 7.28 |
+| Ternary PPL (512 tokens) | 81,119 |
+| Gap vs FP32 | +1,114,125% |
+| Total layers | 155 |
+| Sparsity (threshold 0.7) | 44.4% |
+| Compression ratio | 5.5x |
+| Runtime | 53s |
+| Recommendation | NEEDS_STE_TRAINING |
+
+### Gradient Sensitivity Top-10
+
+| Rank | Layer | Fisher Score | Grad Norm |
+|------|-------|-------------|-----------|
+| 1 | model.layers.2.self_attn.v_proj | 8.0e-06 | 3.13 |
+| 2 | model.layers.15.self_attn.v_proj | 7.0e-06 | 1.19 |
+| 3 | model.layers.21.self_attn.v_proj | 7.0e-06 | 0.53 |
+| 4 | model.layers.16.self_attn.v_proj | 7.0e-06 | 1.14 |
+| 5 | model.layers.7.self_attn.v_proj | 6.0e-06 | 1.59 |
+| 6 | model.layers.1.self_attn.v_proj | 6.0e-06 | 4.83 |
+| 7 | model.layers.14.self_attn.v_proj | 6.0e-06 | 1.12 |
+| 8 | model.layers.20.self_attn.v_proj | 6.0e-06 | 0.72 |
+| 9 | model.layers.19.self_attn.v_proj | 6.0e-06 | 0.83 |
+| 10 | model.layers.13.self_attn.v_proj | 6.0e-06 | 1.27 |
+
+### Key Findings
+
+**1. Gradient sensitivity does NOT match brute-force sensitivity (0/10 overlap)**
+
+Fisher information approximation (`mean(|grad| × |weight|)`) ranks ALL v_proj
+layers as most sensitive — but Day 2 brute-force found q_proj, k_proj, and
+down_proj as the most sensitive types.  This is a fundamental methodological
+finding: gradient magnitude captures "local perturbation impact" while
+brute-force PPL captures "actual quality degradation from quantisation".
+
+**2. v_proj has large gradients but tolerates quantisation well**
+
+v_proj layers appear sensitive by gradient metrics (high Fisher score) because
+they carry meaningful gradient signal.  But they are the *most tolerant* type
+for actual ternary conversion (Day 3 confirmed this).  This paradox occurs
+because ternary quantisation is not a small perturbation — it's a radical
+discretisation that affects different layers differently based on weight
+distribution shape, not just gradient magnitude.
+
+**3. Gradient probes are fast but unreliable for ternary sensitivity**
+
+The quick probe runs in 53s (vs ~3 hours for brute-force).  But the 0/10
+overlap means it cannot be used as a substitute for brute-force per-layer
+sensitivity analysis.  The quant error correlation (r=0.666 from weight
+analysis) is a better cheap proxy.
+
+## STE Weight Comparison (Pre/Post Training)
+
+Compares weight distributions before and after 50-step STE training to
+understand which layers STE training actually modifies and how.
+
+Full data: `data/tinyllama_ste_comparison.json`.
+
+### Configuration
+
+- **Training steps**: 50
+- **Learning rate**: 1e-4
+- **Sequence length**: 256
+- **Training data**: WikiText-2 train split
+- **Loss curve**: 11.32 → 8.08 (28.6% reduction)
+- **Training time**: 1,771s (29.5 min)
+
+### Per-Type Weight Changes
+
+| Type | Layers | Rel Diff | QE Change | Sparsity Change |
+|------|--------|----------|-----------|-----------------|
+| v_proj | 22 | **0.0025** | +0.0000 | +0.0000 |
+| o_proj | 22 | 0.0007 | +0.0000 | +0.0000 |
+| down_proj | 22 | 0.0001 | +0.0000 | +0.0000 |
+| gate_proj | 22 | 0.0001 | +0.0000 | -0.0000 |
+| up_proj | 22 | 0.0001 | -0.0000 | +0.0001 |
+| q_proj | 22 | 0.0000 | -0.0000 | +0.0000 |
+| k_proj | 22 | **0.0000** | -0.0000 | +0.0000 |
+
+### Key Findings
+
+**1. STE training primarily moves v_proj weights**
+
+All top-10 most-changed layers are v_proj.  v_proj's average relative
+weight change (0.0025) is 3.5x larger than the next type (o_proj, 0.0007)
+and infinitely larger than k_proj (0.0000).  This aligns with Day 3's
+finding that v_proj is the most ternary-tolerant type — STE training
+preferentially adjusts these layers because they're the easiest to
+improve.
+
+**2. Early v_proj layers change more than late ones**
+
+Layer 0 v_proj has the largest relative diff (0.0082), decreasing to
+~0.0010 by layer 21.  This matches the weight analysis finding that
+early blocks have higher quant error — STE has more room to improve
+them.
+
+**3. k_proj and q_proj are effectively frozen**
+
+These attention layers (highest kurtosis, highest quant error) change
+by essentially zero under STE.  Their heavy-tailed distributions resist
+gradient-based adjustment.  This suggests that k_proj/q_proj would need
+targeted intervention (e.g., clipping outlier weights before STE, or
+mixed-precision protection) rather than uniform STE training.
+
+**4. 50 steps doesn't change layer-level statistics**
+
+Quant error, sparsity, and standard deviation are virtually unchanged
+per-layer.  STE training at this scale moves weights within their
+existing distribution (shuffling which weights map to ternary values)
+rather than reshaping the distribution itself.  Longer training may
+produce measurable distribution shifts.
+
+## Ternary Inference Demo
+
+Interactive inference using the `v_proj_late3` mixed-precision config
+(3 ternary layers in blocks 19-21, all others FP32).
+
+### Test Output
+
+**Prompt**: "The future of computing lies in"
+
+**Response**: "thehandsofthepeople. 2. 'Thefutureofcomputingliesinthehandsofthepeople' Verse2:"
+
+**Performance**: 30 tokens at 1.9 tok/s (v_proj_late3 config, CPU-only).
+
+The model generates somewhat coherent text despite 3 ternary layers,
+though tokeniser spacing is affected.  This confirms that the v_proj_late3
+config preserves enough model quality for recognisable text generation.
+
 ## Further Optimisation Path
 
 The 512x512 gap and potential for further gains at other sizes suggest
@@ -627,4 +847,5 @@ python benchmarks/bench_tinyllama.py
 *Perplexity evaluation generated 2026-02-24 on the same system.*
 *Mixed-precision evaluation generated 2026-02-25 on the same system.*
 *STE training evaluation generated 2026-02-25 on the same system.*
-*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`*
+*Weight analysis, gradient probe, STE comparison generated 2026-02-25 on the same system.*
+*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`, `benchmarks/analyse_weights.py`, `benchmarks/analyse_ste_weights.py`, `benchmarks/quick_probe.py`*
