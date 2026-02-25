@@ -849,7 +849,8 @@ python benchmarks/bench_tinyllama.py
 *STE training evaluation generated 2026-02-25 on the same system.*
 *Weight analysis, gradient probe, STE comparison generated 2026-02-25 on the same system.*
 *.tern-model v2 format and serialisation generated 2026-02-25 on the same system.*
-*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`, `benchmarks/analyse_weights.py`, `benchmarks/analyse_ste_weights.py`, `benchmarks/quick_probe.py`, `benchmarks/bench_day6.py`*
+*.tern-model round-trip validation generated 2026-02-25 on the same system.*
+*Benchmark scripts: `benchmarks/bench_stage1b.py`, `benchmarks/bench_tinyllama.py`, `benchmarks/eval_perplexity.py`, `benchmarks/eval_ste_training.py`, `benchmarks/analyse_weights.py`, `benchmarks/analyse_ste_weights.py`, `benchmarks/quick_probe.py`, `benchmarks/bench_day6.py`, `benchmarks/bench_day7_roundtrip.py`*
 
 ---
 
@@ -935,3 +936,79 @@ Total test suite: **102 passed**, 3 skipped (TinyLlama download-dependent).
 | Patent 8 | Serialisation | `TernModelWriter.write()` with CRC32 integrity footer |
 | Patent 39 | Ternary-native memory | 2-bit packed format (4 weights/byte), 32-byte aligned |
 | Patent 40 | Bandwidth optimisation | Offset-based manifest enables random-access layer loading |
+
+---
+
+## Day 7: .tern-model Reader, Loader & Round-Trip Validation
+
+### Round-Trip Proof
+
+**Sprint Exit Criterion #4: MET** — bit-identical round-trip validated.
+
+Pipeline: TinyLlama v_proj_late3 → .tern-model → reconstruct → compare.
+
+| Metric | Value |
+|--------|-------|
+| Tensor max diff | **0.0000000000** (bit-identical) |
+| Logit max diff | **0.0000000000** (bit-identical) |
+| Top-1 token match | **True** (all positions) |
+| Reconstructed tensors | 155 (3 ternary + 152 FP16) |
+| Header parse time | 13.9ms |
+| Full reconstruct time | 10.5s |
+| Write time | 16.4s |
+
+Round-trip precision semantics:
+- **Ternary layers**: quantise → pack 2-bit → unpack → ternary * alpha = **bit-identical** to quantised form
+- **FP16 layers**: FP32 → FP16 bytes → FP16 tensor → FP32 = **bit-identical** to FP16 precision
+- Both directions produce exactly the same tensors (max diff = 0.0)
+
+### TernModelReader Additions
+
+New methods added to `TernModelReader` in `src/terncore/tern_model.py`:
+
+| Method | Description |
+|--------|-------------|
+| `reconstruct_layer(name)` | Unpack ternary or FP16 → PyTorch tensor(s) |
+| `reconstruct_all()` | Full state_dict reconstruction |
+| `load_as_model(model)` | High-level: load reconstructed weights into nn.Module |
+| `layer(name)` | Lazy single-layer weight load |
+| `load_all()` | Alias for `reconstruct_all()` |
+| `layer_names()` | List all layer names from manifest |
+| `layer_info(name)` | Get manifest entry without loading weights |
+
+### CLI Tool
+
+`tools/tern_loader.py` — standalone loader for .tern-model files:
+- `--info`: header + manifest summary
+- `--verify`: CRC32 integrity check
+- `--prompt "text"`: load model and run inference
+
+### Test Results
+
+13 new tests in `tests/test_tern_model.py` (31 total), all passing:
+
+| Test | Verified |
+|------|----------|
+| `test_reconstruct_ternary_layer` | Ternary write→read matches quantised form |
+| `test_reconstruct_ternary_with_bias` | Ternary bias roundtrips correctly |
+| `test_reconstruct_fp16_layer` | FP16 write→read is bit-identical to FP16 precision |
+| `test_reconstruct_fp16_with_bias` | FP16 bias roundtrips correctly |
+| `test_reconstruct_all_mixed` | Mixed ternary+FP16 state_dict reconstruction |
+| `test_roundtrip_logits_synthetic` | Synthetic model forward pass matches after round-trip |
+| `test_layer_names` | layer_names() returns correct list |
+| `test_layer_info` | layer_info() returns manifest entry |
+| `test_layer_info_missing` | KeyError on unknown layer |
+| `test_lazy_single_layer` | layer() loads single tensor on demand |
+| `test_load_all` | load_all() returns complete state_dict |
+| `test_header_is_fast` | Header/manifest parsed at init |
+| `test_load_as_model` | load_as_model() loads weights into nn.Module |
+
+Total test suite: **115 passed**, 3 skipped (TinyLlama download-dependent).
+
+### Patent Alignment
+
+| Patent | Claim | Implementation |
+|--------|-------|---------------|
+| Patent 6 | Model format | `reconstruct_layer()` / `reconstruct_all()` — complete read path |
+| Patent 8 | Serialisation | Bit-identical round-trip proof (tensor diff = 0.0) |
+| Patent 36 | Deterministic reproducibility | Same model → same .tern-model → same output (verified) |

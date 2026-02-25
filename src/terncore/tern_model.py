@@ -24,6 +24,7 @@ import time
 import zlib
 import numpy as np
 import torch
+import torch.nn as nn
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
@@ -529,10 +530,159 @@ class TernModelReader:
         Returns:
             Raw bytes for the layer's weight data.
         """
+        entry = self._get_manifest_entry(layer_name)
+        offset = self.header["weights_offset"] + entry["offset"]
+        with open(self.path, "rb") as f:
+            f.seek(offset)
+            return f.read(entry["size"])
+
+    def _get_manifest_entry(self, layer_name: str) -> dict:
+        """Find a manifest entry by layer name."""
         for entry in self.manifest["layers"]:
             if entry["name"] == layer_name:
-                offset = self.header["weights_offset"] + entry["offset"]
-                with open(self.path, "rb") as f:
-                    f.seek(offset)
-                    return f.read(entry["size"])
+                return entry
         raise KeyError(f"Layer {layer_name!r} not found in manifest")
+
+    # ── Reconstruction methods ──────────────────────────────────
+
+    def reconstruct_layer(self, name: str) -> dict[str, torch.Tensor]:
+        """
+        Read a layer and reconstruct as PyTorch tensor(s).
+
+        For ternary layers: unpack 2-bit → ternary {-1,0,+1} → float32 * alpha.
+        For float16 layers: reinterpret raw bytes as float16 tensor, cast to float32.
+
+        Args:
+            name: Layer name from manifest.
+
+        Returns:
+            Dict with "weight" tensor and optionally "bias" tensor.
+        """
+        entry = self._get_manifest_entry(name)
+        raw = self.read_layer_data(name)
+        buf = io.BytesIO(raw)
+
+        if entry["dtype"] == "ternary2":
+            return self._reconstruct_ternary(buf, entry)
+        elif entry["dtype"] == "float16":
+            return self._reconstruct_fp16(buf, entry)
+        else:
+            raise ValueError(f"Unknown dtype {entry['dtype']!r} for layer {name!r}")
+
+    def _reconstruct_ternary(
+        self, buf: io.BytesIO, entry: dict
+    ) -> dict[str, torch.Tensor]:
+        """Reconstruct a ternary layer from its binary data."""
+        shape = entry["shape"]
+        num_params = entry["num_params"]
+
+        # Read alpha
+        alpha = struct.unpack("<f", buf.read(4))[0]
+
+        # Read packed weights
+        packed_size = struct.unpack("<I", buf.read(4))[0]
+        packed_bytes = buf.read(packed_size)
+        packed_tensor = torch.frombuffer(
+            bytearray(packed_bytes), dtype=torch.uint8
+        )
+
+        # Unpack 2-bit → ternary {-1, 0, +1}
+        ternary = unpack_ternary_weights(packed_tensor, torch.Size(shape))
+
+        # Scale by alpha to get reconstructed weights
+        weight = ternary * alpha
+
+        result: dict[str, torch.Tensor] = {"weight": weight}
+
+        # Skip bitmap
+        bitmap_size = struct.unpack("<I", buf.read(4))[0]
+        if bitmap_size > 0:
+            buf.read(bitmap_size)
+
+        # Read bias if present
+        bias_size = struct.unpack("<I", buf.read(4))[0]
+        if bias_size > 0:
+            bias_bytes = buf.read(bias_size)
+            result["bias"] = torch.frombuffer(
+                bytearray(bias_bytes), dtype=torch.float32
+            ).clone()
+
+        return result
+
+    def _reconstruct_fp16(
+        self, buf: io.BytesIO, entry: dict
+    ) -> dict[str, torch.Tensor]:
+        """Reconstruct an FP16 layer from its binary data."""
+        shape = entry["shape"]
+
+        # Read weight data
+        weight_size = struct.unpack("<I", buf.read(4))[0]
+        weight_bytes = buf.read(weight_size)
+        weight = torch.frombuffer(
+            bytearray(weight_bytes), dtype=torch.float16
+        ).reshape(shape).float().clone()
+
+        result: dict[str, torch.Tensor] = {"weight": weight}
+
+        # Read bias if present
+        bias_size = struct.unpack("<I", buf.read(4))[0]
+        if bias_size > 0:
+            bias_bytes = buf.read(bias_size)
+            result["bias"] = torch.frombuffer(
+                bytearray(bias_bytes), dtype=torch.float16
+            ).float().clone()
+
+        return result
+
+    def reconstruct_all(self) -> dict[str, torch.Tensor]:
+        """
+        Reconstruct all layers as a flat state_dict-compatible dict.
+
+        Returns:
+            {"layer.name.weight": tensor, "layer.name.bias": tensor, ...}
+        """
+        state_dict: dict[str, torch.Tensor] = {}
+        for entry in self.manifest["layers"]:
+            name = entry["name"]
+            tensors = self.reconstruct_layer(name)
+            state_dict[f"{name}.weight"] = tensors["weight"]
+            if "bias" in tensors:
+                state_dict[f"{name}.bias"] = tensors["bias"]
+        return state_dict
+
+    def load_as_model(
+        self,
+        model: nn.Module,
+        strict: bool = False,
+    ) -> Tuple[list[str], list[str]]:
+        """
+        Reconstruct state_dict and load into an existing model.
+
+        Args:
+            model:  PyTorch model instance to load weights into.
+            strict: If True, raise on missing/unexpected keys.
+
+        Returns:
+            (missing_keys, unexpected_keys) from load_state_dict.
+        """
+        state_dict = self.reconstruct_all()
+        result = model.load_state_dict(state_dict, strict=strict)
+        return list(result.missing_keys), list(result.unexpected_keys)
+
+    # ── Lazy loading convenience API ────────────────────────────
+
+    def layer(self, name: str) -> torch.Tensor:
+        """Load and reconstruct a single layer's weight tensor on demand."""
+        return self.reconstruct_layer(name)["weight"]
+
+    def load_all(self) -> dict[str, torch.Tensor]:
+        """Load all layers as a state_dict. Alias for reconstruct_all()."""
+        return self.reconstruct_all()
+
+    def layer_names(self) -> list[str]:
+        """List all layer names from the manifest (no weight loading)."""
+        return [entry["name"] for entry in self.manifest["layers"]]
+
+    def layer_info(self, name: str) -> dict:
+        """Get manifest metadata for a layer without loading weights."""
+        return dict(self._get_manifest_entry(name))
