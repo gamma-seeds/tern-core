@@ -1,0 +1,205 @@
+{
+  "benchmark": "Terncore Metal Kernel vs FP16",
+  "timestamp": "2026-03-25T06:51:37.596497+00:00",
+  "device": "Apple M4 Pro",
+  "config": {
+    "warmup_runs": 10,
+    "benchmark_runs": 100,
+    "batch_size": 1
+  },
+  "layers": [
+    {
+      "layer": "attn_qkv",
+      "M": 2048,
+      "K": 2048,
+      "sparsity": 0.6201093196868896,
+      "metal_ternary": {
+        "mean_us": 279.2658200269216,
+        "median_us": 222.35399956116453,
+        "min_us": 191.58299983246252,
+        "stdev_us": 130.09950784950067,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 187.77498009512783,
+        "median_us": 161.31300071720034,
+        "min_us": 132.7500012848759,
+        "stdev_us": 116.95515376700024
+      },
+      "dequant_mps": {
+        "mean_us": 827.2441399640229,
+        "median_us": 781.4379996489151,
+        "min_us": 613.1660011305939,
+        "stdev_us": 224.434246745244
+      },
+      "memory": {
+        "fp16_bytes": 8388608,
+        "packed_2bit_bytes": 1048576,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    },
+    {
+      "layer": "attn_out",
+      "M": 2048,
+      "K": 2048,
+      "sparsity": 0.6205124855041504,
+      "metal_ternary": {
+        "mean_us": 165.14458002347965,
+        "median_us": 159.3750002939487,
+        "min_us": 120.41700028930791,
+        "stdev_us": 30.101009439379904,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 168.03667982458137,
+        "median_us": 168.16700008348562,
+        "min_us": 137.54099927609786,
+        "stdev_us": 12.935225201896234
+      },
+      "dequant_mps": {
+        "mean_us": 1053.8758700931794,
+        "median_us": 1032.0210003555985,
+        "min_us": 861.9169984740438,
+        "stdev_us": 120.59956403553046
+      },
+      "memory": {
+        "fp16_bytes": 8388608,
+        "packed_2bit_bytes": 1048576,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    },
+    {
+      "layer": "mlp_gate",
+      "M": 5632,
+      "K": 2048,
+      "sparsity": 0.6200800808993253,
+      "metal_ternary": {
+        "mean_us": 329.5369999796094,
+        "median_us": 275.0829999058624,
+        "min_us": 253.87499954376835,
+        "stdev_us": 117.62013094132752,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 250.39783999091014,
+        "median_us": 241.43700102285948,
+        "min_us": 214.16700110421516,
+        "stdev_us": 41.9229147135791
+      },
+      "dequant_mps": {
+        "mean_us": 2949.1362600128923,
+        "median_us": 2910.5209996487247,
+        "min_us": 2132.625000740518,
+        "stdev_us": 616.4675704826017
+      },
+      "memory": {
+        "fp16_bytes": 23068672,
+        "packed_2bit_bytes": 2883584,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    },
+    {
+      "layer": "mlp_up",
+      "M": 5632,
+      "K": 2048,
+      "sparsity": 0.6201491789384321,
+      "metal_ternary": {
+        "mean_us": 219.31454990408383,
+        "median_us": 213.60400023695547,
+        "min_us": 194.08399930398446,
+        "stdev_us": 39.46142997182624,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 232.6558100321563,
+        "median_us": 224.12450016418006,
+        "min_us": 213.49999951780774,
+        "stdev_us": 38.78021465921583
+      },
+      "dequant_mps": {
+        "mean_us": 2509.590389945515,
+        "median_us": 2444.1460000161896,
+        "min_us": 2156.833999833907,
+        "stdev_us": 258.4247128621183
+      },
+      "memory": {
+        "fp16_bytes": 23068672,
+        "packed_2bit_bytes": 2883584,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    },
+    {
+      "layer": "mlp_down",
+      "M": 2048,
+      "K": 5632,
+      "sparsity": 0.6198057694868608,
+      "metal_ternary": {
+        "mean_us": 235.71158988488605,
+        "median_us": 232.31249997479608,
+        "min_us": 196.66700063680764,
+        "stdev_us": 25.73407667520026,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 250.01672007419984,
+        "median_us": 245.56249991292134,
+        "min_us": 208.87499886157457,
+        "stdev_us": 24.624538213911304
+      },
+      "dequant_mps": {
+        "mean_us": 2810.557880129636,
+        "median_us": 2797.228999043,
+        "min_us": 2353.5000000265427,
+        "stdev_us": 334.1523365926623
+      },
+      "memory": {
+        "fp16_bytes": 23068672,
+        "packed_2bit_bytes": 2883584,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    },
+    {
+      "layer": "lm_head",
+      "M": 32000,
+      "K": 2048,
+      "sparsity": 0.6199931793212891,
+      "metal_ternary": {
+        "mean_us": 513.2445898561855,
+        "median_us": 406.083499910892,
+        "min_us": 382.8329990938073,
+        "stdev_us": 308.0721297799235,
+        "kernel": "fast"
+      },
+      "fp16_mps": {
+        "mean_us": 710.9762499021599,
+        "median_us": 696.0835007703281,
+        "min_us": 644.5420003728941,
+        "stdev_us": 49.23379960687854
+      },
+      "dequant_mps": {
+        "mean_us": 8543.100069928187,
+        "median_us": 8500.103999722342,
+        "min_us": 8359.583000128623,
+        "stdev_us": 144.4736008918845
+      },
+      "memory": {
+        "fp16_bytes": 131072000,
+        "packed_2bit_bytes": 16384000,
+        "compression_ratio": 8.0,
+        "bandwidth_reduction": "8.0x"
+      }
+    }
+  ],
+  "aggregate": {
+    "metal_total_us": 1742.218129675166,
+    "fp16_total_us": 1799.8582799191354,
+    "dequant_total_us": 18693.504610073433,
+    "speedup_vs_fp16": 1.0330843476268476,
+    "speedup_vs_dequant": 10.729715350602401
+  }
+}
