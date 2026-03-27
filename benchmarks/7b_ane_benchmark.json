@@ -1,0 +1,102 @@
+{
+  "benchmark": "7B-scale ANE \u2014 ternary vs FP16",
+  "timestamp": "2026-03-27T04:11:29.700643+00:00",
+  "hardware": "Apple M4 Pro",
+  "architecture": {
+    "model": "Llama 2 7B dimensions",
+    "hidden": 4096,
+    "intermediate": 11008,
+    "blocks": 32,
+    "heads": 32,
+    "linear_params": 6476005376
+  },
+  "config": {
+    "input_shape": [
+      1,
+      64,
+      4096
+    ],
+    "warmup": 10,
+    "runs": 30
+  },
+  "quantization": {
+    "n_layers": 224,
+    "total_params": 6476005376,
+    "total_zeros": 2267219457,
+    "sparsity": 0.35009536363300264
+  },
+  "results": {
+    "mps_fp16": {
+      "label": "MPS FP16",
+      "mean_ms": 147.83416809853708,
+      "min_ms": 147.37583399983123,
+      "stdev_ms": 0.28894234074571784
+    },
+    "coreml_fp16_all": {
+      "label": "CoreML FP16 (ALL)",
+      "mean_ms": 120.48853196708174,
+      "min_ms": 119.88162499619648,
+      "stdev_ms": 0.31201736022977583
+    },
+    "coreml_fp16_ane": {
+      "label": "CoreML FP16 (ANE)",
+      "mean_ms": 144.7201666330026,
+      "min_ms": 140.26933300192468,
+      "stdev_ms": 2.127573742013491
+    },
+    "mps_ternary": {
+      "label": "MPS Ternary",
+      "mean_ms": 147.82899310133266,
+      "min_ms": 147.4040419998346,
+      "stdev_ms": 0.22737652368107575
+    },
+    "tern_2bit_all": {
+      "label": "Ternary 2-bit (ALL)",
+      "mean_ms": 39.22018326605515,
+      "min_ms": 39.06908299541101,
+      "stdev_ms": 0.07796579817713617
+    },
+    "tern_2bit_ane": {
+      "label": "Ternary 2-bit (ANE)",
+      "mean_ms": 39.19837356709953,
+      "min_ms": 39.06466699845623,
+      "stdev_ms": 0.0855963282447687
+    },
+    "tern_2bit_gpu": {
+      "label": "Ternary 2-bit (GPU)",
+      "mean_ms": 186.95782359912602,
+      "min_ms": 183.02587501239032,
+      "stdev_ms": 2.30878634698849
+    },
+    "sparse_m30_a20_all": {
+      "label": "Sparse 30% MLP / 20% attn (ALL)",
+      "mean_ms": 29.75914986600401,
+      "min_ms": 29.367082999669947,
+      "stdev_ms": 0.35408627452638286
+    },
+    "sparse_m30_a20_ane": {
+      "label": "Sparse 30% MLP / 20% attn (ANE)",
+      "mean_ms": 29.862323635218974,
+      "min_ms": 29.30212501087226,
+      "stdev_ms": 0.24526782982298065,
+      "params": 4962910208,
+      "param_reduction": 0.23364637305699487,
+      "model_mb": 927.3900423049927
+    },
+    "sparse_m40_a30_all": {
+      "label": "Sparse 40% MLP / 30% attn (ALL)",
+      "mean_ms": 24.878734799373586,
+      "min_ms": 24.850125002558343,
+      "stdev_ms": 0.022712405697629525
+    },
+    "sparse_m40_a30_ane": {
+      "label": "Sparse 40% MLP / 30% attn (ANE)",
+      "mean_ms": 24.886655566418387,
+      "min_ms": 24.862124992068857,
+      "stdev_ms": 0.027893773063853503,
+      "params": 4422762496,
+      "param_reduction": 0.3170539183937824,
+      "model_mb": 798.6059160232544
+    }
+  }
+}
