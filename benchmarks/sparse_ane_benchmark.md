@@ -1,12 +1,12 @@
 # Sparse Channel-Pruned ANE Benchmark
 
 > Structured channel pruning for faster ternary inference on ANE
-> Apple M4 Pro · 2026-03-27 13:29
+> Apple M4 Pro · 2026-03-27 13:31
 
 ## Method
 
 The ANE executes dense matrix multiplications — it cannot skip individual zero
-weights. To exploit ternary sparsity (7.30 ms dense baseline),
+weights. To exploit ternary sparsity (7.23 ms dense baseline),
 we use **structured channel pruning**:
 
 1. Quantize to ternary {-α, 0, +α} (43% weight sparsity)
@@ -30,24 +30,24 @@ we use **structured channel pruning**:
 | Warmup | 10 |
 | Measured runs | 50 |
 | Compute units | CPU_AND_NE (ANE) |
-| Baseline | Dense ternary 2-bit = 7.30 ms |
+| Baseline | Dense ternary 2-bit = 7.23 ms |
 
 ## Results
 
 | Config | Latency (ms) | Min (ms) | Speedup | Model Size | Params |
 |--------|:------------:|:--------:|:-------:|:----------:|:------:|
-| Dense Ternary 2-bit (ANE) | 7.30 | 7.19 | 1.00x | 225.6 MB | 100% |
-| Sparse 20% MLP / 10% attn (ANE) | 6.10 | 6.02 | 1.20x | 184.9 MB | 82% |
-| Sparse 30% MLP / 20% attn (ANE) | 5.30 | 5.23 | 1.38x | 162.4 MB | 73% |
-| Sparse 40% MLP / 30% attn (ANE) | 5.40 | 4.69 | 1.35x | 139.8 MB | 63% |
-| Sparse 50% MLP / 40% attn (ANE) | 4.11 | 4.03 | 1.78x | 117.2 MB | 53% |
+| Dense Ternary 2-bit (ANE) | 7.23 | 7.15 | 1.00x | 225.6 MB | 100% |
+| Sparse 20% MLP / 10% attn (ANE) | 6.29 | 6.19 | 1.15x | 184.9 MB | 82% |
+| Sparse 30% MLP / 20% attn (ANE) | 5.33 | 5.24 | 1.36x | 162.4 MB | 73% |
+| Sparse 40% MLP / 30% attn (ANE) | 4.68 | 4.60 | 1.55x | 139.8 MB | 63% |
+| Sparse 50% MLP / 40% attn (ANE) | 4.02 | 3.96 | 1.80x | 117.2 MB | 53% |
 
 ## Best Configuration
 
 **Sparse 50% MLP / 40% attn (ANE)** achieves the best latency:
 
-- **4.11 ms** vs **7.30 ms** dense baseline
-- **1.78x speedup** from channel pruning
+- **4.02 ms** vs **7.23 ms** dense baseline
+- **1.80x speedup** from channel pruning
 - **117.2 MB** model size (vs 225.6 MB dense)
 - **46.9% parameter reduction**
 
@@ -55,11 +55,11 @@ we use **structured channel pruning**:
 
 | Config | Tok/s | vs Dense |
 |--------|:-----:|:--------:|
-| Dense Ternary 2-bit (ANE) | 8769 | 1.00x |
-| Sparse 20% MLP / 10% attn (ANE) | 10493 | 1.20x |
-| Sparse 30% MLP / 20% attn (ANE) | 12066 | 1.38x |
-| Sparse 40% MLP / 30% attn (ANE) | 11855 | 1.35x |
-| Sparse 50% MLP / 40% attn (ANE) | 15581 | 1.78x |
+| Dense Ternary 2-bit (ANE) | 8849 | 1.00x |
+| Sparse 20% MLP / 10% attn (ANE) | 10181 | 1.15x |
+| Sparse 30% MLP / 20% attn (ANE) | 12012 | 1.36x |
+| Sparse 40% MLP / 30% attn (ANE) | 13672 | 1.55x |
+| Sparse 50% MLP / 40% attn (ANE) | 15906 | 1.80x |
 
 ## Analysis
 
