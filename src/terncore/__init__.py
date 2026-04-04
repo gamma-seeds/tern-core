@@ -36,6 +36,7 @@ from terncore.cube import (
     CUBE_ADDRESS_SPACE,
     validate_address,
 )
+from terncore.persistence import GuardianPersistence, CubeySessionPersistence
 
 __all__ = [
     # v0.1.0 — Ternary execution engine
@@ -71,4 +72,7 @@ __all__ = [
     "GuardianVerdict",
     "CUBE_ADDRESS_SPACE",
     "validate_address",
+    # v0.4.1 — Persistence
+    "GuardianPersistence",
+    "CubeySessionPersistence",
 ]
