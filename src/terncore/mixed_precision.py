@@ -84,6 +84,27 @@ class MixedPrecisionConverter:
         # Track whether an explicit list was provided
         self._explicit_protection = protection_list is not None
 
+    @classmethod
+    def from_protection_list(
+        cls,
+        protection_list: list[str],
+        threshold: float = 0.7,
+    ) -> "MixedPrecisionConverter":
+        """Construct with a pre-determined protection list, skipping auto_scan.
+
+        Use this when the protection list has been computed externally (e.g.
+        by streaming_scan or loaded from a cached ScanResult).
+
+        Args:
+            protection_list: Layer names to keep in original precision.
+            threshold:       Quantisation threshold for ternary layers.
+        """
+        return cls(
+            threshold=threshold,
+            protection_list=protection_list,
+            auto=False,
+        )
+
     @property
     def scan_result(self):
         """The ScanResult from the last auto-scan, or None."""
