@@ -200,6 +200,9 @@ def load_cached_result(
         converted_list=entry["converted_list"],
         sweep_trace=entry.get("sweep_trace", []),
         cached=True,
+        ternary_list=entry.get("ternary_list", []),
+        int4_list=entry.get("int4_list", []),
+        mixed_compression_ratio=entry.get("mixed_compression_ratio", 0.0),
     )
 
 
@@ -219,6 +222,9 @@ def _save_result(result: ScanResult, threshold: float) -> None:
         "protection_list": result.protection_list,
         "converted_list": result.converted_list,
         "sweep_trace": result.sweep_trace,
+        "ternary_list": result.ternary_list,
+        "int4_list": result.int4_list,
+        "mixed_compression_ratio": result.mixed_compression_ratio,
     }
     _save_cache(cache)
 
