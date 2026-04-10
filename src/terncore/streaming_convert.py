@@ -134,9 +134,9 @@ class StreamingConverter:
             elif isinstance(item, NonBlockWeights):
                 self._process_non_block(item, protection_set, writer, report)
 
-        # Write output
-        self._log(f"  Writing {self.output_path}...")
-        write_stats = writer.write(self.output_path)
+        # Write output (streaming two-pass to avoid holding all weights in memory)
+        self._log(f"  Writing {self.output_path} (streaming)...")
+        write_stats = writer.write_streaming(self.output_path)
 
         # Finalise report
         report.output_path = str(self.output_path)

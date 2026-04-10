@@ -353,6 +353,166 @@ class TernModelWriter:
         else:
             buf.write(struct.pack("<I", 0))
 
+    def write_streaming(self, path: str | Path) -> dict:
+        """
+        Streaming two-pass write for large models.
+
+        Unlike write(), this never holds all weight data in memory.
+        Pass 1 writes weights to a temp file, recording offsets and
+        computing CRC32 incrementally.  Pass 2 assembles the final
+        .tern-model: header + manifest + weights (copied from temp)
+        + footer.
+
+        Peak memory: one layer's binary data at a time (~900 MB max
+        for the largest FP16 layer in a 70B model).
+
+        Returns:
+            Dict with file stats (size, num_layers, crc32).
+        """
+        import tempfile
+        import shutil
+
+        path = Path(path)
+        layer_manifests = []
+        crc = 0
+        weights_size = 0
+        num_ternary = 0
+        num_protected = 0
+
+        # --- Pass 1: write weights to temp file ---
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".tern-weights")
+        try:
+            with open(tmp_fd, "wb") as tmp_f:
+                for layer in self._layers:
+                    layer_offset = tmp_f.tell()
+
+                    # Write layer data to a small buffer, then flush to disk
+                    layer_buf = io.BytesIO()
+                    if layer["dtype"] == "ternary2":
+                        self._write_ternary_layer(layer_buf, layer)
+                        num_ternary += 1
+                    else:
+                        self._write_fp16_layer(layer_buf, layer)
+                        num_protected += 1
+
+                    layer_bytes = layer_buf.getvalue()
+                    layer_size = len(layer_bytes)
+                    tmp_f.write(layer_bytes)
+
+                    # Update incremental CRC32
+                    crc = zlib.crc32(layer_bytes, crc)
+
+                    # Pad to alignment
+                    pad_needed = (_align_to(tmp_f.tell(), ALIGNMENT)
+                                  - tmp_f.tell())
+                    if pad_needed > 0:
+                        pad_bytes = b"\x00" * pad_needed
+                        tmp_f.write(pad_bytes)
+                        crc = zlib.crc32(pad_bytes, crc)
+
+                    # Manifest entry
+                    entry = {
+                        k: v for k, v in layer.items()
+                        if not k.startswith("_")
+                    }
+                    entry["offset"] = layer_offset
+                    entry["size"] = layer_size
+                    layer_manifests.append(entry)
+
+                    # Free the layer's binary data immediately
+                    layer.pop("_packed", None)
+                    layer.pop("_bitmap", None)
+                    layer.pop("_bias", None)
+                    layer.pop("_weight_data", None)
+                    del layer_bytes, layer_buf
+
+                weights_size = tmp_f.tell()
+
+            crc = crc & 0xFFFFFFFF
+
+            # --- Build manifest ---
+            manifest_obj = {
+                "model_metadata": {
+                    "source": self._metadata.get("source", "unknown"),
+                    "created_at": time.strftime(
+                        "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+                    ),
+                    "created_by": "terncore",
+                    "terncore_version": "0.5.1",
+                    "notes": self._metadata.get("notes", ""),
+                    **{k: v for k, v in self._metadata.items()
+                       if k not in ("source", "notes")},
+                },
+                "layers": layer_manifests,
+            }
+            manifest_json = json.dumps(manifest_obj, indent=2).encode("utf-8")
+
+            # Section offsets
+            manifest_offset = HEADER_SIZE
+            manifest_size = len(manifest_json)
+            weights_offset = _align_to(
+                manifest_offset + manifest_size, ALIGNMENT
+            )
+            manifest_padding = (
+                weights_offset - manifest_offset - manifest_size
+            )
+
+            # --- Build header ---
+            header = io.BytesIO()
+            header.write(TERN_MAGIC)
+            header.write(struct.pack("<H", TERN_VERSION))
+            header.write(struct.pack("<H", HEADER_SIZE))
+            header.write(struct.pack("<Q", manifest_offset))
+            header.write(struct.pack("<Q", manifest_size))
+            header.write(struct.pack("<Q", weights_offset))
+            header.write(struct.pack("<Q", weights_size))
+            header.write(struct.pack("<I", len(self._layers)))
+            header.write(struct.pack("<I", num_ternary))
+            header.write(struct.pack("<I", num_protected))
+            header.write(b"\x00" * (HEADER_SIZE - header.tell()))
+            header_data = header.getvalue()
+            assert len(header_data) == HEADER_SIZE
+
+            # --- Footer ---
+            total_size = (HEADER_SIZE + manifest_size
+                          + manifest_padding + weights_size + 16)
+            footer = struct.pack("<I", crc)
+            footer += struct.pack("<Q", total_size)
+            footer += TERN_MAGIC_REVERSE
+
+            # --- Pass 2: assemble final file ---
+            with open(path, "wb") as out_f:
+                out_f.write(header_data)
+                out_f.write(manifest_json)
+                out_f.write(b"\x00" * manifest_padding)
+
+                # Stream weights from temp file in 64 MB chunks
+                with open(tmp_path, "rb") as tmp_f:
+                    while True:
+                        chunk = tmp_f.read(64 * 1024 * 1024)
+                        if not chunk:
+                            break
+                        out_f.write(chunk)
+
+                out_f.write(footer)
+
+        finally:
+            # Clean up temp file
+            try:
+                import os
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+
+        return {
+            "file_size": total_size,
+            "num_layers": len(self._layers),
+            "num_ternary": num_ternary,
+            "num_protected": num_protected,
+            "weights_size": weights_size,
+            "crc32": crc,
+        }
+
     # ── Static helpers ──────────────────────────────────────────
 
     @staticmethod

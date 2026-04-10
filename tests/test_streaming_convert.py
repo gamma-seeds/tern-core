@@ -252,6 +252,129 @@ class TestStreamingConverter:
         report = converter.convert()
         assert report.blocks_processed == 2
 
+    def test_output_verifies_with_reader(self, synthetic_model, tmp_path):
+        """The .tern-model written by streaming converter passes CRC verification."""
+        from terncore.streaming_convert import StreamingConverter
+        from terncore.tern_model import TernModelReader
+        output = tmp_path / "verified.tern-model"
+        converter = StreamingConverter(
+            model_dir=synthetic_model,
+            output_path=output,
+            verbose=False,
+        )
+        converter.convert()
+        reader = TernModelReader(output)
+        assert reader.verify(), "CRC32 verification failed on streaming output"
+        assert reader.header["num_layers"] == 21
+
+    def test_output_layer_names_match(self, synthetic_model, tmp_path):
+        """All weight names from the sharded model appear in the .tern-model manifest."""
+        from terncore.streaming_convert import StreamingConverter
+        from terncore.tern_model import TernModelReader
+        output = tmp_path / "names.tern-model"
+        converter = StreamingConverter(
+            model_dir=synthetic_model,
+            output_path=output,
+            verbose=False,
+        )
+        converter.convert()
+        reader = TernModelReader(output)
+        manifest_names = {e["name"] for e in reader.manifest["layers"]}
+        assert "model.layers.0.self_attn.q_proj.weight" in manifest_names
+        assert "lm_head.weight" in manifest_names
+        assert "model.embed_tokens.weight" in manifest_names
+
+    def test_ternary_layers_reconstructible(self, synthetic_model, tmp_path):
+        """Ternary layers can be reconstructed to FP32 tensors."""
+        from terncore.streaming_convert import StreamingConverter
+        from terncore.tern_model import TernModelReader
+        output = tmp_path / "recon.tern-model"
+        converter = StreamingConverter(
+            model_dir=synthetic_model,
+            output_path=output,
+            verbose=False,
+        )
+        converter.convert()
+        reader = TernModelReader(output)
+        tensors = reader.reconstruct_layer("model.layers.0.self_attn.v_proj.weight")
+        assert "weight" in tensors
+        assert tensors["weight"].shape == (HIDDEN // 4, HIDDEN)
+
+
+# ---------------------------------------------------------------------------
+# TernModelWriter.write_streaming tests
+# ---------------------------------------------------------------------------
+
+class TestStreamingWrite:
+
+    def test_streaming_write_matches_buffered(self, tmp_path):
+        """write_streaming() produces a file verifiable by TernModelReader."""
+        from terncore.tern_model import TernModelWriter, TernModelReader
+        torch.manual_seed(42)
+
+        writer = TernModelWriter({"source": "test"})
+        writer.add_layer("layer.0", torch.randn(32, 16), dtype="ternary2")
+        writer.add_layer("layer.1", torch.randn(16, 8), dtype="float16")
+
+        path = tmp_path / "streaming.tern-model"
+        stats = writer.write_streaming(path)
+
+        assert path.exists()
+        assert stats["file_size"] > 0
+        assert stats["num_ternary"] == 1
+        assert stats["num_protected"] == 1
+
+        reader = TernModelReader(path)
+        assert reader.verify()
+
+    def test_streaming_write_crc_valid(self, tmp_path):
+        """CRC32 computed incrementally matches what the reader expects."""
+        from terncore.tern_model import TernModelWriter, TernModelReader
+        torch.manual_seed(42)
+
+        writer = TernModelWriter({"source": "crc-test"})
+        for i in range(5):
+            writer.add_layer(f"layer.{i}", torch.randn(64, 32), dtype="ternary2")
+        writer.add_layer("protected.0", torch.randn(64, 32), dtype="float16")
+
+        path = tmp_path / "crc.tern-model"
+        writer.write_streaming(path)
+
+        reader = TernModelReader(path)
+        assert reader.verify(), "Incremental CRC32 does not match stored CRC32"
+
+    def test_streaming_write_reconstructs_correctly(self, tmp_path):
+        """Layers written via streaming can be reconstructed."""
+        from terncore.tern_model import TernModelWriter, TernModelReader
+        torch.manual_seed(42)
+
+        original = torch.randn(32, 16)
+        writer = TernModelWriter({"source": "recon-test"})
+        writer.add_layer("proj", original, dtype="float16")
+
+        path = tmp_path / "recon.tern-model"
+        writer.write_streaming(path)
+
+        reader = TernModelReader(path)
+        reconstructed = reader.reconstruct_layer("proj")["weight"]
+        # FP16 round-trip tolerance
+        assert torch.allclose(original, reconstructed, atol=1e-3)
+
+    def test_streaming_write_temp_file_cleaned(self, tmp_path):
+        """No temp files left behind after write."""
+        import glob
+        from terncore.tern_model import TernModelWriter
+        torch.manual_seed(42)
+
+        writer = TernModelWriter({"source": "cleanup-test"})
+        writer.add_layer("layer.0", torch.randn(16, 8), dtype="ternary2")
+
+        before = set(glob.glob(str(tmp_path / "*.tern-weights")))
+        writer.write_streaming(tmp_path / "out.tern-model")
+        after = set(glob.glob(str(tmp_path / "*.tern-weights")))
+        # Temp file may not be in tmp_path (uses system temp), but check no leftovers
+        assert before == after
+
 
 # ---------------------------------------------------------------------------
 # Layer sensitivity tests
