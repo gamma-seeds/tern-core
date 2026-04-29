@@ -127,8 +127,8 @@ test_matmul: test_matmul.c ternary_matmul.c
 test_packed: test_packed.c ternary_packed.c ternary_matmul.c
 	$(CC) $(CFLAGS) $(OMP_CFLAGS) $(OMP_LDFLAGS) -o $@ $^
 
-test_sparse_skip: test_sparse_skip.c $(ALL_C)
-	$(CC) $(CFLAGS) $(OMP_CFLAGS) $(AVX2_FLAGS) $(OMP_LDFLAGS) -o $@ $^
+test_sparse_skip: test_sparse_skip.c $(ALL_C) $(VERSION_HEADER)
+	$(CC) $(CFLAGS) $(OMP_CFLAGS) $(AVX2_FLAGS) $(OMP_LDFLAGS) -o $@ test_sparse_skip.c $(ALL_C)
 
 test_simd: test_simd.c $(ALL_C)
 	$(CC) $(CFLAGS) $(OMP_CFLAGS) $(AVX2_FLAGS) $(OMP_LDFLAGS) -o $@ $^
