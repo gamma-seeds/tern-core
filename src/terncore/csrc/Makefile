@@ -111,7 +111,7 @@ ternary_avx2.o: ternary_avx2.c ternary_simd.h ternary_packed.h ternary_matmul.h
 ternary_neon.o: ternary_neon.c ternary_simd.h ternary_packed.h ternary_matmul.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-bindings.o: bindings.c sparse_skip.h ternary_simd.h ternary_packed.h ternary_matmul.h
+bindings.o: bindings.c sparse_skip.h ternary_simd.h ternary_packed.h ternary_matmul.h $(VERSION_HEADER)
 	$(CC) $(CFLAGS) $(AVX2_FLAGS) -c -o $@ $<
 
 %.o: %.c
