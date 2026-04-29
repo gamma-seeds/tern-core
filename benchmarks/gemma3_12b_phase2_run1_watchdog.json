@@ -1,0 +1,90 @@
+{
+  "runner": "bench_gemma3_12b_phase2.py",
+  "model_path": "/Users/syn/synapticode/models/coreml/gemma3-12b/gemma3_12b_ternary_v0.1.0.mlpackage",
+  "timestamp_utc": "2026-04-15T03:02:50.655896+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "seq_len": 64,
+  "warmup_runs": 10,
+  "benchmark_runs": 50,
+  "stage": "killed_presumed",
+  "spec": {
+    "input_name": "input_ids",
+    "input_dtype": "INT32",
+    "input_shape": [
+      1,
+      512
+    ],
+    "output_name": "logits",
+    "spec_version": 9
+  },
+  "raw_benchmarks": {
+    "ALL": {
+      "compute_units": "ALL",
+      "load_seconds": 15.60926537499472,
+      "latency_mean_ms": 1946.8798716194578,
+      "latency_median_ms": 1852.8894584960653,
+      "latency_min_ms": 1779.2527090059593,
+      "latency_max_ms": 2358.054208001704,
+      "latency_stdev_ms": 168.73983837096236,
+      "tokens_per_second": 32.87311196389502,
+      "peak_rss_mb": 18266.9375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "CPU_AND_NE",
+      "load_seconds": 1380.379454583992,
+      "latency_mean_ms": 13627.38064171921,
+      "latency_median_ms": 13623.416521004401,
+      "latency_min_ms": 13185.69737499638,
+      "latency_max_ms": 13885.273166000843,
+      "latency_stdev_ms": 154.15757468294686,
+      "tokens_per_second": 4.696427118507923,
+      "peak_rss_mb": 42326.265625,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "CPU_AND_GPU",
+      "load_seconds": 22.262513624998974,
+      "latency_mean_ms": 1919.5859891403234,
+      "latency_median_ms": 1843.6711875037872,
+      "latency_min_ms": 1781.908500008285,
+      "latency_max_ms": 2189.585708998493,
+      "latency_stdev_ms": 144.26127725023716,
+      "tokens_per_second": 33.340522572089654,
+      "peak_rss_mb": 42326.265625,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "palettised_benchmarks": {},
+  "model_sizes_mb": {
+    "raw": 7566.403841972351
+  },
+  "energy": {},
+  "error": null,
+  "validation": {
+    "load_s": 14.893411124998238,
+    "predict_s": 2.2976609999896027,
+    "output_shapes": {
+      "logits": [
+        1,
+        512,
+        262208
+      ]
+    },
+    "rss_mb": 17597.96875
+  },
+  "watchdog_trip": {
+    "reason": "compressor_trip",
+    "ts": "2026-04-15T03:46:51.189946+00:00",
+    "comp": 1894945,
+    "free": 4269,
+    "spec": 5100,
+    "rss_mb": 44363.4375
+  }
+}

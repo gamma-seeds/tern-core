@@ -1,0 +1,130 @@
+{
+  "runner": "bench_gemma3_12b_phase2.py",
+  "model_path": "/Users/syn/synapticode/models/coreml/phi4-14b/phi4_14b_ternary_v0.1.0.mlpackage",
+  "timestamp_utc": "2026-04-15T08:02:28.727099+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "seq_len": 64,
+  "warmup_runs": 10,
+  "benchmark_runs": 50,
+  "stage": "done",
+  "spec": {
+    "input_name": "input_ids",
+    "input_dtype": "INT32",
+    "input_shape": [
+      1,
+      512
+    ],
+    "output_name": "logits",
+    "spec_version": 9
+  },
+  "raw_benchmarks": {
+    "ALL": {
+      "compute_units": "ALL",
+      "load_seconds": 31.590590374995372,
+      "latency_mean_ms": 2206.116873420251,
+      "latency_median_ms": 2091.269208001904,
+      "latency_min_ms": 2057.475916997646,
+      "latency_max_ms": 2480.1176659966586,
+      "latency_stdev_ms": 174.40466068309314,
+      "tokens_per_second": 29.010249081127633,
+      "peak_rss_mb": 19905.609375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "CPU_AND_NE",
+      "load_seconds": 26047.199490249986,
+      "latency_mean_ms": 13421.6314109019,
+      "latency_median_ms": 13412.481875508092,
+      "latency_min_ms": 13343.239542009542,
+      "latency_max_ms": 13738.600833021337,
+      "latency_stdev_ms": 69.36247763057617,
+      "tokens_per_second": 4.768421814058695,
+      "peak_rss_mb": 47502.53125,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "CPU_AND_GPU",
+      "load_seconds": 19.987509833008517,
+      "latency_mean_ms": 2176.615992417792,
+      "latency_median_ms": 2101.482375001069,
+      "latency_min_ms": 2041.1020829924382,
+      "latency_max_ms": 2452.8263329993933,
+      "latency_stdev_ms": 137.06993544406535,
+      "tokens_per_second": 29.403441040102162,
+      "peak_rss_mb": 47502.53125,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "palettised_benchmarks": {
+    "ALL": {
+      "compute_units": "2bit_ALL",
+      "load_seconds": 28.132738999993308,
+      "latency_mean_ms": 2151.3105216802796,
+      "latency_median_ms": 2087.3019584978465,
+      "latency_min_ms": 2050.461958977394,
+      "latency_max_ms": 2326.366916007828,
+      "latency_stdev_ms": 112.75064440082312,
+      "tokens_per_second": 29.74930831929035,
+      "peak_rss_mb": 47502.53125,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "2bit_CPU_AND_NE",
+      "load_seconds": 26082.956174459017,
+      "latency_mean_ms": 14118.303052499541,
+      "latency_median_ms": 14089.674646005733,
+      "latency_min_ms": 13554.934291023528,
+      "latency_max_ms": 15196.550416992977,
+      "latency_stdev_ms": 317.8097442360121,
+      "tokens_per_second": 4.533122696262655,
+      "peak_rss_mb": 52829.328125,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "model_sizes_mb": {
+    "raw": 8983.667375564575,
+    "palettised_2bit": 7268.562450408936
+  },
+  "energy": {
+    "raw_best": {
+      "label": "raw_ALL",
+      "power_mean_w": 27.578,
+      "power_median_w": 28.448,
+      "power_stdev_w": 3.067,
+      "power_samples": 17,
+      "inferences": 8,
+      "energy_per_inference_mj": 51709.19
+    },
+    "pal_best": {
+      "label": "2bit_ALL",
+      "power_mean_w": 27.778,
+      "power_median_w": 28.920,
+      "power_stdev_w": 4.939,
+      "power_samples": 17,
+      "inferences": 8,
+      "energy_per_inference_mj": 52084.41
+    }
+  },
+  "error": null,
+  "validation": {
+    "load_s": 19.17711533299007,
+    "predict_s": 2.4114855420048116,
+    "output_shapes": {
+      "logits": [
+        1,
+        512,
+        100352
+      ]
+    },
+    "rss_mb": 19563.15625
+  },
+  "palettise_seconds": 217.08334716700483
+}

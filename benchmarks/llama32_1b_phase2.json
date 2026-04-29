@@ -1,0 +1,150 @@
+{
+  "runner": "bench_llama32_1b_phase2.py",
+  "model_path": "/Users/syn/synapticode/models/coreml/llama32-1b/llama32_1b_ternary_v0.1.0.mlpackage",
+  "timestamp_utc": "2026-04-14T08:08:03.030581+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "seq_len": 64,
+  "warmup_runs": 10,
+  "benchmark_runs": 50,
+  "stage": "done",
+  "spec": {
+    "input_name": "input_ids",
+    "input_dtype": "INT32",
+    "input_shape": [
+      1,
+      64
+    ],
+    "output_name": "logits",
+    "spec_version": 9
+  },
+  "raw_benchmarks": {
+    "ALL": {
+      "compute_units": "ALL",
+      "load_seconds": 2.151195625003311,
+      "latency_mean_ms": 41.18582501963829,
+      "latency_median_ms": 40.95433349721134,
+      "latency_min_ms": 40.10020799614722,
+      "latency_max_ms": 43.00508300366346,
+      "latency_stdev_ms": 0.6240323042193844,
+      "tokens_per_second": 1553.9326933352295,
+      "peak_rss_mb": 3118.296875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "CPU_AND_NE",
+      "load_seconds": 4.207497584000521,
+      "latency_mean_ms": 42.61868000001414,
+      "latency_median_ms": 42.66439550337964,
+      "latency_min_ms": 41.668749996460974,
+      "latency_max_ms": 43.3984999981476,
+      "latency_stdev_ms": 0.4539630399060137,
+      "tokens_per_second": 1501.6889307688264,
+      "peak_rss_mb": 4119.375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "CPU_AND_GPU",
+      "load_seconds": 1.815529499996046,
+      "latency_mean_ms": 40.97138418001123,
+      "latency_median_ms": 40.86768749766634,
+      "latency_min_ms": 40.03012500470504,
+      "latency_max_ms": 42.55262499646051,
+      "latency_stdev_ms": 0.6136773561367254,
+      "tokens_per_second": 1562.0658486618515,
+      "peak_rss_mb": 4119.375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "palettised_benchmarks": {
+    "ALL": {
+      "compute_units": "2bit_ALL",
+      "load_seconds": 9.017817083004047,
+      "latency_mean_ms": 50.33422346052248,
+      "latency_median_ms": 50.1436670019757,
+      "latency_min_ms": 45.20829200191656,
+      "latency_max_ms": 55.29937500250526,
+      "latency_stdev_ms": 2.154906566367285,
+      "tokens_per_second": 1271.500692768126,
+      "peak_rss_mb": 12328.109375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "2bit_CPU_AND_NE",
+      "load_seconds": 10.758619500003988,
+      "latency_mean_ms": 39.560549981106305,
+      "latency_median_ms": 39.43425000397838,
+      "latency_min_ms": 38.877625003806315,
+      "latency_max_ms": 40.77487500035204,
+      "latency_stdev_ms": 0.4560333969407354,
+      "tokens_per_second": 1617.7732622667206,
+      "peak_rss_mb": 12328.109375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "2bit_CPU_AND_GPU",
+      "load_seconds": 1.0937134170017089,
+      "latency_mean_ms": 48.313153300550766,
+      "latency_median_ms": 48.85983349595335,
+      "latency_min_ms": 43.19079099514056,
+      "latency_max_ms": 52.93595800321782,
+      "latency_stdev_ms": 2.5418638451350817,
+      "tokens_per_second": 1324.6910132705082,
+      "peak_rss_mb": 12328.109375,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "model_sizes_mb": {
+    "raw": 1022.6592397689819,
+    "palettised_2bit": 584.2846632003784
+  },
+  "energy": {
+    "raw_best": {
+      "label": "raw_CPU_AND_GPU",
+      "power_mean_w": 15.905857142857142,
+      "power_median_w": 16.4585,
+      "power_stdev_w": 2.6043810384439894,
+      "power_samples": 14,
+      "inferences": 324,
+      "energy_per_inference_mj": 736.382275132275
+    },
+    "pal_best": {
+      "label": "2bit_CPU_AND_NE",
+      "power_mean_w": 7.413928571428571,
+      "power_median_w": 7.76,
+      "power_stdev_w": 1.369315295730271,
+      "power_samples": 14,
+      "inferences": 358,
+      "energy_per_inference_mj": 310.63946528332
+    }
+  },
+  "error": null,
+  "validation": {
+    "load_s": 2.2636680840005283,
+    "predict_s": 0.4527031250036089,
+    "output_shapes": {
+      "logits": [
+        1,
+        64,
+        128256
+      ]
+    },
+    "rss_mb": 2956.90625
+  },
+  "palettise_seconds": 42.100689709004655,
+  "peak_rss_mb": 12328.109375,
+  "watchdog_last_sample": {
+    "ts": "2026-04-14T08:10:19.414908+00:00",
+    "comp": 107338,
+    "free": 339048,
+    "spec": 259757
+  }
+}

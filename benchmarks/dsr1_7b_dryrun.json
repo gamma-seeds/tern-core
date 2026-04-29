@@ -1,0 +1,2889 @@
+{
+  "runner": "terncore.convert --dry-run",
+  "model_id": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+  "adapter": "llama",
+  "architecture": "LlamaForCausalLM",
+  "threshold": 0.7,
+  "timestamp_utc": "2026-04-17T07:44:13.194414+00:00",
+  "elapsed_seconds": 17.1,
+  "total_weights": 339,
+  "total_params": 7615616512,
+  "ternary_eligible_weights": 196,
+  "ternary_eligible_params": 6525288448,
+  "fp16_retain_weights": 143,
+  "fp16_retain_params": 1090328064,
+  "ternary_ratio": 0.8568,
+  "estimated_tern_model_mb": 3635.4,
+  "estimated_compression_vs_fp16": 4.0,
+  "fp16_baseline_mb": 14525.6,
+  "components": {
+    "language": 339
+  },
+  "fp16_retain_reasons": {
+    "Protected pattern: 'embed_tokens'": 1,
+    "Protected pattern: 'norm'": 57,
+    "1-D tensor (bias or scalar parameter)": 84,
+    "Protected pattern: 'lm_head'": 1
+  },
+  "fp16_retain_layers": [
+    {
+      "name": "model.embed_tokens.weight",
+      "canonical_name": "model.embed_tokens.weight",
+      "reason": "Protected pattern: 'embed_tokens'",
+      "component": "language",
+      "shape": [
+        152064,
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.0.input_layernorm.weight",
+      "canonical_name": "model.layers.0.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.0.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.0.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.0.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.0.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.0.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.0.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.0.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.0.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.1.input_layernorm.weight",
+      "canonical_name": "model.layers.1.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.1.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.1.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.1.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.1.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.1.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.1.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.1.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.1.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.10.input_layernorm.weight",
+      "canonical_name": "model.layers.10.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.10.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.10.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.10.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.10.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.10.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.10.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.10.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.10.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.11.input_layernorm.weight",
+      "canonical_name": "model.layers.11.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.11.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.11.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.11.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.11.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.11.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.11.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.11.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.11.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.12.input_layernorm.weight",
+      "canonical_name": "model.layers.12.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.12.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.12.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.12.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.12.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.12.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.12.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.12.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.12.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.13.input_layernorm.weight",
+      "canonical_name": "model.layers.13.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.13.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.13.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.13.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.13.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.13.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.13.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.13.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.13.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.14.input_layernorm.weight",
+      "canonical_name": "model.layers.14.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.14.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.14.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.14.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.14.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.14.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.14.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.14.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.14.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.15.input_layernorm.weight",
+      "canonical_name": "model.layers.15.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.15.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.15.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.15.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.15.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.15.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.15.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.15.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.15.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.16.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.16.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.16.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.16.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.16.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.16.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.2.input_layernorm.weight",
+      "canonical_name": "model.layers.2.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.2.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.2.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.2.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.2.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.2.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.2.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.2.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.2.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.3.input_layernorm.weight",
+      "canonical_name": "model.layers.3.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.3.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.3.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.3.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.3.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.3.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.3.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.3.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.4.input_layernorm.weight",
+      "canonical_name": "model.layers.4.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.4.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.4.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.4.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.4.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.4.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.4.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.4.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.4.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.5.input_layernorm.weight",
+      "canonical_name": "model.layers.5.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.5.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.5.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.5.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.5.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.5.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.5.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.5.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.5.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.6.input_layernorm.weight",
+      "canonical_name": "model.layers.6.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.6.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.6.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.6.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.6.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.6.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.6.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.6.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.6.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.7.input_layernorm.weight",
+      "canonical_name": "model.layers.7.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.7.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.7.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.7.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.7.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.7.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.7.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.7.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.7.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.8.input_layernorm.weight",
+      "canonical_name": "model.layers.8.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.8.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.8.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.8.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.8.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.8.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.8.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.8.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.8.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.9.input_layernorm.weight",
+      "canonical_name": "model.layers.9.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.9.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.9.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.9.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.9.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.9.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.9.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.9.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.9.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "lm_head.weight",
+      "canonical_name": "lm_head.weight",
+      "reason": "Protected pattern: 'lm_head'",
+      "component": "language",
+      "shape": [
+        152064,
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.16.input_layernorm.weight",
+      "canonical_name": "model.layers.16.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.16.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.16.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.17.input_layernorm.weight",
+      "canonical_name": "model.layers.17.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.17.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.17.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.17.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.17.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.17.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.17.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.17.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.17.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.18.input_layernorm.weight",
+      "canonical_name": "model.layers.18.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.18.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.18.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.18.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.18.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.18.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.18.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.18.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.18.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.19.input_layernorm.weight",
+      "canonical_name": "model.layers.19.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.19.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.19.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.19.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.19.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.19.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.19.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.19.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.19.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.20.input_layernorm.weight",
+      "canonical_name": "model.layers.20.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.20.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.20.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.20.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.20.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.20.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.20.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.20.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.20.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.21.input_layernorm.weight",
+      "canonical_name": "model.layers.21.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.21.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.21.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.21.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.21.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.21.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.21.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.21.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.21.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.22.input_layernorm.weight",
+      "canonical_name": "model.layers.22.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.22.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.22.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.22.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.22.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.22.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.22.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.22.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.22.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.23.input_layernorm.weight",
+      "canonical_name": "model.layers.23.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.23.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.23.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.23.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.23.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.23.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.23.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.23.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.23.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.24.input_layernorm.weight",
+      "canonical_name": "model.layers.24.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.24.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.24.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.24.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.24.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.24.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.24.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.24.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.24.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.25.input_layernorm.weight",
+      "canonical_name": "model.layers.25.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.25.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.25.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.25.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.25.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.25.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.25.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.25.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.25.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.26.input_layernorm.weight",
+      "canonical_name": "model.layers.26.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.26.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.26.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.26.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.26.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.26.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.26.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.26.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.26.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.27.input_layernorm.weight",
+      "canonical_name": "model.layers.27.input_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.27.post_attention_layernorm.weight",
+      "canonical_name": "model.layers.27.post_attention_layernorm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.27.self_attn.k_proj.bias",
+      "canonical_name": "model.layers.27.self_attn.k_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.layers.27.self_attn.q_proj.bias",
+      "canonical_name": "model.layers.27.self_attn.q_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    },
+    {
+      "name": "model.layers.27.self_attn.v_proj.bias",
+      "canonical_name": "model.layers.27.self_attn.v_proj.bias",
+      "reason": "1-D tensor (bias or scalar parameter)",
+      "component": "language",
+      "shape": [
+        512
+      ]
+    },
+    {
+      "name": "model.norm.weight",
+      "canonical_name": "model.norm.weight",
+      "reason": "Protected pattern: 'norm'",
+      "component": "language",
+      "shape": [
+        3584
+      ]
+    }
+  ],
+  "tolerance_scan": [
+    {
+      "name": "model.layers.24.mlp.up_proj.weight",
+      "canonical_name": "model.layers.24.mlp.up_proj.weight",
+      "relative_error": 0.444297,
+      "num_params": 67895296,
+      "sparsity": 0.4258,
+      "alpha": 0.031023
+    },
+    {
+      "name": "model.layers.23.mlp.up_proj.weight",
+      "canonical_name": "model.layers.23.mlp.up_proj.weight",
+      "relative_error": 0.444927,
+      "num_params": 67895296,
+      "sparsity": 0.4262,
+      "alpha": 0.030771
+    },
+    {
+      "name": "model.layers.25.mlp.up_proj.weight",
+      "canonical_name": "model.layers.25.mlp.up_proj.weight",
+      "relative_error": 0.445042,
+      "num_params": 67895296,
+      "sparsity": 0.4272,
+      "alpha": 0.031248
+    },
+    {
+      "name": "model.layers.4.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.4.mlp.gate_proj.weight",
+      "relative_error": 0.445096,
+      "num_params": 67895296,
+      "sparsity": 0.4261,
+      "alpha": 0.031214
+    },
+    {
+      "name": "model.layers.3.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.3.mlp.gate_proj.weight",
+      "relative_error": 0.445325,
+      "num_params": 67895296,
+      "sparsity": 0.4249,
+      "alpha": 0.030345
+    },
+    {
+      "name": "model.layers.5.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.5.mlp.gate_proj.weight",
+      "relative_error": 0.445464,
+      "num_params": 67895296,
+      "sparsity": 0.4258,
+      "alpha": 0.029966
+    },
+    {
+      "name": "model.layers.24.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.24.mlp.gate_proj.weight",
+      "relative_error": 0.445537,
+      "num_params": 67895296,
+      "sparsity": 0.426,
+      "alpha": 0.029435
+    },
+    {
+      "name": "model.layers.25.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.25.mlp.gate_proj.weight",
+      "relative_error": 0.446013,
+      "num_params": 67895296,
+      "sparsity": 0.427,
+      "alpha": 0.029279
+    },
+    {
+      "name": "model.layers.26.mlp.up_proj.weight",
+      "canonical_name": "model.layers.26.mlp.up_proj.weight",
+      "relative_error": 0.446051,
+      "num_params": 67895296,
+      "sparsity": 0.4281,
+      "alpha": 0.031255
+    },
+    {
+      "name": "model.layers.26.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.26.mlp.gate_proj.weight",
+      "relative_error": 0.446082,
+      "num_params": 67895296,
+      "sparsity": 0.4277,
+      "alpha": 0.029162
+    },
+    {
+      "name": "model.layers.0.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.0.self_attn.v_proj.weight",
+      "relative_error": 0.446614,
+      "num_params": 1835008,
+      "sparsity": 0.4279,
+      "alpha": 0.018451
+    },
+    {
+      "name": "model.layers.27.mlp.up_proj.weight",
+      "canonical_name": "model.layers.27.mlp.up_proj.weight",
+      "relative_error": 0.447186,
+      "num_params": 67895296,
+      "sparsity": 0.4275,
+      "alpha": 0.031079
+    },
+    {
+      "name": "model.layers.23.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.23.mlp.gate_proj.weight",
+      "relative_error": 0.447504,
+      "num_params": 67895296,
+      "sparsity": 0.4279,
+      "alpha": 0.029813
+    },
+    {
+      "name": "model.layers.22.mlp.up_proj.weight",
+      "canonical_name": "model.layers.22.mlp.up_proj.weight",
+      "relative_error": 0.447775,
+      "num_params": 67895296,
+      "sparsity": 0.4273,
+      "alpha": 0.030709
+    },
+    {
+      "name": "model.layers.8.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.8.mlp.gate_proj.weight",
+      "relative_error": 0.448004,
+      "num_params": 67895296,
+      "sparsity": 0.4269,
+      "alpha": 0.029832
+    },
+    {
+      "name": "model.layers.11.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.11.mlp.gate_proj.weight",
+      "relative_error": 0.44807,
+      "num_params": 67895296,
+      "sparsity": 0.4275,
+      "alpha": 0.029975
+    },
+    {
+      "name": "model.layers.24.mlp.down_proj.weight",
+      "canonical_name": "model.layers.24.mlp.down_proj.weight",
+      "relative_error": 0.448078,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.030802
+    },
+    {
+      "name": "model.layers.8.mlp.up_proj.weight",
+      "canonical_name": "model.layers.8.mlp.up_proj.weight",
+      "relative_error": 0.448106,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.029495
+    },
+    {
+      "name": "model.layers.27.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.27.mlp.gate_proj.weight",
+      "relative_error": 0.448218,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.029864
+    },
+    {
+      "name": "model.layers.23.mlp.down_proj.weight",
+      "canonical_name": "model.layers.23.mlp.down_proj.weight",
+      "relative_error": 0.448371,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.030473
+    },
+    {
+      "name": "model.layers.21.mlp.up_proj.weight",
+      "canonical_name": "model.layers.21.mlp.up_proj.weight",
+      "relative_error": 0.44852,
+      "num_params": 67895296,
+      "sparsity": 0.4296,
+      "alpha": 0.030669
+    },
+    {
+      "name": "model.layers.6.mlp.up_proj.weight",
+      "canonical_name": "model.layers.6.mlp.up_proj.weight",
+      "relative_error": 0.448985,
+      "num_params": 67895296,
+      "sparsity": 0.4302,
+      "alpha": 0.028506
+    },
+    {
+      "name": "model.layers.10.mlp.up_proj.weight",
+      "canonical_name": "model.layers.10.mlp.up_proj.weight",
+      "relative_error": 0.449023,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.029268
+    },
+    {
+      "name": "model.layers.10.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.10.mlp.gate_proj.weight",
+      "relative_error": 0.449045,
+      "num_params": 67895296,
+      "sparsity": 0.4285,
+      "alpha": 0.030228
+    },
+    {
+      "name": "model.layers.11.mlp.up_proj.weight",
+      "canonical_name": "model.layers.11.mlp.up_proj.weight",
+      "relative_error": 0.449057,
+      "num_params": 67895296,
+      "sparsity": 0.4278,
+      "alpha": 0.029559
+    },
+    {
+      "name": "model.layers.19.mlp.up_proj.weight",
+      "canonical_name": "model.layers.19.mlp.up_proj.weight",
+      "relative_error": 0.449436,
+      "num_params": 67895296,
+      "sparsity": 0.4286,
+      "alpha": 0.030466
+    },
+    {
+      "name": "model.layers.25.mlp.down_proj.weight",
+      "canonical_name": "model.layers.25.mlp.down_proj.weight",
+      "relative_error": 0.449728,
+      "num_params": 67895296,
+      "sparsity": 0.4308,
+      "alpha": 0.031138
+    },
+    {
+      "name": "model.layers.7.mlp.up_proj.weight",
+      "canonical_name": "model.layers.7.mlp.up_proj.weight",
+      "relative_error": 0.44989,
+      "num_params": 67895296,
+      "sparsity": 0.43,
+      "alpha": 0.029143
+    },
+    {
+      "name": "model.layers.26.mlp.down_proj.weight",
+      "canonical_name": "model.layers.26.mlp.down_proj.weight",
+      "relative_error": 0.449907,
+      "num_params": 67895296,
+      "sparsity": 0.4298,
+      "alpha": 0.030831
+    },
+    {
+      "name": "model.layers.9.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.9.mlp.gate_proj.weight",
+      "relative_error": 0.44991,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.032098
+    },
+    {
+      "name": "model.layers.9.mlp.up_proj.weight",
+      "canonical_name": "model.layers.9.mlp.up_proj.weight",
+      "relative_error": 0.449954,
+      "num_params": 67895296,
+      "sparsity": 0.4307,
+      "alpha": 0.027939
+    },
+    {
+      "name": "model.layers.16.mlp.up_proj.weight",
+      "canonical_name": "model.layers.16.mlp.up_proj.weight",
+      "relative_error": 0.450162,
+      "num_params": 67895296,
+      "sparsity": 0.4292,
+      "alpha": 0.030051
+    },
+    {
+      "name": "model.layers.20.mlp.up_proj.weight",
+      "canonical_name": "model.layers.20.mlp.up_proj.weight",
+      "relative_error": 0.450539,
+      "num_params": 67895296,
+      "sparsity": 0.4295,
+      "alpha": 0.030611
+    },
+    {
+      "name": "model.layers.7.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.7.mlp.gate_proj.weight",
+      "relative_error": 0.450741,
+      "num_params": 67895296,
+      "sparsity": 0.4285,
+      "alpha": 0.029876
+    },
+    {
+      "name": "model.layers.11.mlp.down_proj.weight",
+      "canonical_name": "model.layers.11.mlp.down_proj.weight",
+      "relative_error": 0.450763,
+      "num_params": 67895296,
+      "sparsity": 0.4284,
+      "alpha": 0.029429
+    },
+    {
+      "name": "model.layers.16.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.16.mlp.gate_proj.weight",
+      "relative_error": 0.451102,
+      "num_params": 67895296,
+      "sparsity": 0.4288,
+      "alpha": 0.029258
+    },
+    {
+      "name": "model.layers.10.mlp.down_proj.weight",
+      "canonical_name": "model.layers.10.mlp.down_proj.weight",
+      "relative_error": 0.45116,
+      "num_params": 67895296,
+      "sparsity": 0.4294,
+      "alpha": 0.029262
+    },
+    {
+      "name": "model.layers.13.mlp.up_proj.weight",
+      "canonical_name": "model.layers.13.mlp.up_proj.weight",
+      "relative_error": 0.451248,
+      "num_params": 67895296,
+      "sparsity": 0.429,
+      "alpha": 0.029714
+    },
+    {
+      "name": "model.layers.12.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.12.mlp.gate_proj.weight",
+      "relative_error": 0.451281,
+      "num_params": 67895296,
+      "sparsity": 0.4276,
+      "alpha": 0.029536
+    },
+    {
+      "name": "model.layers.16.mlp.down_proj.weight",
+      "canonical_name": "model.layers.16.mlp.down_proj.weight",
+      "relative_error": 0.451319,
+      "num_params": 67895296,
+      "sparsity": 0.4295,
+      "alpha": 0.029662
+    },
+    {
+      "name": "model.layers.22.mlp.down_proj.weight",
+      "canonical_name": "model.layers.22.mlp.down_proj.weight",
+      "relative_error": 0.451477,
+      "num_params": 67895296,
+      "sparsity": 0.4314,
+      "alpha": 0.030393
+    },
+    {
+      "name": "model.layers.9.mlp.down_proj.weight",
+      "canonical_name": "model.layers.9.mlp.down_proj.weight",
+      "relative_error": 0.451587,
+      "num_params": 67895296,
+      "sparsity": 0.4316,
+      "alpha": 0.027751
+    },
+    {
+      "name": "model.layers.17.mlp.up_proj.weight",
+      "canonical_name": "model.layers.17.mlp.up_proj.weight",
+      "relative_error": 0.451644,
+      "num_params": 67895296,
+      "sparsity": 0.4291,
+      "alpha": 0.030118
+    },
+    {
+      "name": "model.layers.12.mlp.up_proj.weight",
+      "canonical_name": "model.layers.12.mlp.up_proj.weight",
+      "relative_error": 0.451712,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.029814
+    },
+    {
+      "name": "model.layers.8.mlp.down_proj.weight",
+      "canonical_name": "model.layers.8.mlp.down_proj.weight",
+      "relative_error": 0.451882,
+      "num_params": 67895296,
+      "sparsity": 0.4292,
+      "alpha": 0.029278
+    },
+    {
+      "name": "model.layers.6.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.6.self_attn.v_proj.weight",
+      "relative_error": 0.452069,
+      "num_params": 1835008,
+      "sparsity": 0.4343,
+      "alpha": 0.027434
+    },
+    {
+      "name": "model.layers.2.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.2.self_attn.v_proj.weight",
+      "relative_error": 0.452188,
+      "num_params": 1835008,
+      "sparsity": 0.4452,
+      "alpha": 0.02012
+    },
+    {
+      "name": "model.layers.19.mlp.down_proj.weight",
+      "canonical_name": "model.layers.19.mlp.down_proj.weight",
+      "relative_error": 0.452204,
+      "num_params": 67895296,
+      "sparsity": 0.4301,
+      "alpha": 0.02998
+    },
+    {
+      "name": "model.layers.17.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.17.mlp.gate_proj.weight",
+      "relative_error": 0.45224,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.029118
+    },
+    {
+      "name": "model.layers.18.mlp.up_proj.weight",
+      "canonical_name": "model.layers.18.mlp.up_proj.weight",
+      "relative_error": 0.452316,
+      "num_params": 67895296,
+      "sparsity": 0.431,
+      "alpha": 0.030484
+    },
+    {
+      "name": "model.layers.13.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.13.mlp.gate_proj.weight",
+      "relative_error": 0.4524,
+      "num_params": 67895296,
+      "sparsity": 0.4292,
+      "alpha": 0.029695
+    },
+    {
+      "name": "model.layers.21.mlp.down_proj.weight",
+      "canonical_name": "model.layers.21.mlp.down_proj.weight",
+      "relative_error": 0.452402,
+      "num_params": 67895296,
+      "sparsity": 0.4304,
+      "alpha": 0.03019
+    },
+    {
+      "name": "model.layers.22.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.22.mlp.gate_proj.weight",
+      "relative_error": 0.452739,
+      "num_params": 67895296,
+      "sparsity": 0.429,
+      "alpha": 0.029547
+    },
+    {
+      "name": "model.layers.8.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.8.self_attn.v_proj.weight",
+      "relative_error": 0.453037,
+      "num_params": 1835008,
+      "sparsity": 0.4369,
+      "alpha": 0.027736
+    },
+    {
+      "name": "model.layers.15.mlp.up_proj.weight",
+      "canonical_name": "model.layers.15.mlp.up_proj.weight",
+      "relative_error": 0.453457,
+      "num_params": 67895296,
+      "sparsity": 0.43,
+      "alpha": 0.030029
+    },
+    {
+      "name": "model.layers.5.mlp.down_proj.weight",
+      "canonical_name": "model.layers.5.mlp.down_proj.weight",
+      "relative_error": 0.453477,
+      "num_params": 67895296,
+      "sparsity": 0.4279,
+      "alpha": 0.028525
+    },
+    {
+      "name": "model.layers.5.mlp.up_proj.weight",
+      "canonical_name": "model.layers.5.mlp.up_proj.weight",
+      "relative_error": 0.453526,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.028207
+    },
+    {
+      "name": "model.layers.17.mlp.down_proj.weight",
+      "canonical_name": "model.layers.17.mlp.down_proj.weight",
+      "relative_error": 0.453625,
+      "num_params": 67895296,
+      "sparsity": 0.4296,
+      "alpha": 0.029636
+    },
+    {
+      "name": "model.layers.5.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.5.self_attn.v_proj.weight",
+      "relative_error": 0.453651,
+      "num_params": 1835008,
+      "sparsity": 0.4357,
+      "alpha": 0.025918
+    },
+    {
+      "name": "model.layers.13.mlp.down_proj.weight",
+      "canonical_name": "model.layers.13.mlp.down_proj.weight",
+      "relative_error": 0.453737,
+      "num_params": 67895296,
+      "sparsity": 0.4302,
+      "alpha": 0.029569
+    },
+    {
+      "name": "model.layers.15.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.15.mlp.gate_proj.weight",
+      "relative_error": 0.454095,
+      "num_params": 67895296,
+      "sparsity": 0.4302,
+      "alpha": 0.029328
+    },
+    {
+      "name": "model.layers.15.mlp.down_proj.weight",
+      "canonical_name": "model.layers.15.mlp.down_proj.weight",
+      "relative_error": 0.45432,
+      "num_params": 67895296,
+      "sparsity": 0.4298,
+      "alpha": 0.029731
+    },
+    {
+      "name": "model.layers.19.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.19.mlp.gate_proj.weight",
+      "relative_error": 0.454456,
+      "num_params": 67895296,
+      "sparsity": 0.4297,
+      "alpha": 0.029298
+    },
+    {
+      "name": "model.layers.14.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.14.mlp.gate_proj.weight",
+      "relative_error": 0.454518,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.029454
+    },
+    {
+      "name": "model.layers.24.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.24.self_attn.o_proj.weight",
+      "relative_error": 0.454684,
+      "num_params": 12845056,
+      "sparsity": 0.4321,
+      "alpha": 0.04674
+    },
+    {
+      "name": "model.layers.18.mlp.down_proj.weight",
+      "canonical_name": "model.layers.18.mlp.down_proj.weight",
+      "relative_error": 0.45476,
+      "num_params": 67895296,
+      "sparsity": 0.431,
+      "alpha": 0.029986
+    },
+    {
+      "name": "model.layers.25.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.25.self_attn.o_proj.weight",
+      "relative_error": 0.454907,
+      "num_params": 12845056,
+      "sparsity": 0.4319,
+      "alpha": 0.048721
+    },
+    {
+      "name": "model.layers.14.mlp.up_proj.weight",
+      "canonical_name": "model.layers.14.mlp.up_proj.weight",
+      "relative_error": 0.45495,
+      "num_params": 67895296,
+      "sparsity": 0.4312,
+      "alpha": 0.029862
+    },
+    {
+      "name": "model.layers.6.mlp.down_proj.weight",
+      "canonical_name": "model.layers.6.mlp.down_proj.weight",
+      "relative_error": 0.455039,
+      "num_params": 67895296,
+      "sparsity": 0.4297,
+      "alpha": 0.028133
+    },
+    {
+      "name": "model.layers.21.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.21.mlp.gate_proj.weight",
+      "relative_error": 0.455072,
+      "num_params": 67895296,
+      "sparsity": 0.4303,
+      "alpha": 0.02947
+    },
+    {
+      "name": "model.layers.20.mlp.down_proj.weight",
+      "canonical_name": "model.layers.20.mlp.down_proj.weight",
+      "relative_error": 0.455132,
+      "num_params": 67895296,
+      "sparsity": 0.4316,
+      "alpha": 0.030119
+    },
+    {
+      "name": "model.layers.18.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.18.mlp.gate_proj.weight",
+      "relative_error": 0.455309,
+      "num_params": 67895296,
+      "sparsity": 0.431,
+      "alpha": 0.029062
+    },
+    {
+      "name": "model.layers.4.mlp.up_proj.weight",
+      "canonical_name": "model.layers.4.mlp.up_proj.weight",
+      "relative_error": 0.455437,
+      "num_params": 67895296,
+      "sparsity": 0.432,
+      "alpha": 0.027569
+    },
+    {
+      "name": "model.layers.11.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.11.self_attn.v_proj.weight",
+      "relative_error": 0.455842,
+      "num_params": 1835008,
+      "sparsity": 0.4377,
+      "alpha": 0.027038
+    },
+    {
+      "name": "model.layers.3.mlp.up_proj.weight",
+      "canonical_name": "model.layers.3.mlp.up_proj.weight",
+      "relative_error": 0.455879,
+      "num_params": 67895296,
+      "sparsity": 0.4321,
+      "alpha": 0.027551
+    },
+    {
+      "name": "model.layers.12.mlp.down_proj.weight",
+      "canonical_name": "model.layers.12.mlp.down_proj.weight",
+      "relative_error": 0.45622,
+      "num_params": 67895296,
+      "sparsity": 0.43,
+      "alpha": 0.029627
+    },
+    {
+      "name": "model.layers.15.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.15.self_attn.v_proj.weight",
+      "relative_error": 0.456236,
+      "num_params": 1835008,
+      "sparsity": 0.4377,
+      "alpha": 0.02879
+    },
+    {
+      "name": "model.layers.14.mlp.down_proj.weight",
+      "canonical_name": "model.layers.14.mlp.down_proj.weight",
+      "relative_error": 0.456273,
+      "num_params": 67895296,
+      "sparsity": 0.4316,
+      "alpha": 0.029709
+    },
+    {
+      "name": "model.layers.20.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.20.mlp.gate_proj.weight",
+      "relative_error": 0.456624,
+      "num_params": 67895296,
+      "sparsity": 0.431,
+      "alpha": 0.029184
+    },
+    {
+      "name": "model.layers.4.mlp.down_proj.weight",
+      "canonical_name": "model.layers.4.mlp.down_proj.weight",
+      "relative_error": 0.456704,
+      "num_params": 67895296,
+      "sparsity": 0.4299,
+      "alpha": 0.028152
+    },
+    {
+      "name": "model.layers.6.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.6.mlp.gate_proj.weight",
+      "relative_error": 0.457273,
+      "num_params": 67895296,
+      "sparsity": 0.4314,
+      "alpha": 0.031428
+    },
+    {
+      "name": "model.layers.16.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.16.self_attn.v_proj.weight",
+      "relative_error": 0.457496,
+      "num_params": 1835008,
+      "sparsity": 0.438,
+      "alpha": 0.030897
+    },
+    {
+      "name": "model.layers.10.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.10.self_attn.v_proj.weight",
+      "relative_error": 0.457623,
+      "num_params": 1835008,
+      "sparsity": 0.439,
+      "alpha": 0.029212
+    },
+    {
+      "name": "model.layers.5.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.5.self_attn.o_proj.weight",
+      "relative_error": 0.458531,
+      "num_params": 12845056,
+      "sparsity": 0.431,
+      "alpha": 0.037642
+    },
+    {
+      "name": "model.layers.2.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.2.self_attn.o_proj.weight",
+      "relative_error": 0.458655,
+      "num_params": 12845056,
+      "sparsity": 0.431,
+      "alpha": 0.035479
+    },
+    {
+      "name": "model.layers.22.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.22.self_attn.o_proj.weight",
+      "relative_error": 0.458781,
+      "num_params": 12845056,
+      "sparsity": 0.4338,
+      "alpha": 0.045905
+    },
+    {
+      "name": "model.layers.9.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.9.self_attn.v_proj.weight",
+      "relative_error": 0.459584,
+      "num_params": 1835008,
+      "sparsity": 0.4434,
+      "alpha": 0.031823
+    },
+    {
+      "name": "model.layers.7.mlp.down_proj.weight",
+      "canonical_name": "model.layers.7.mlp.down_proj.weight",
+      "relative_error": 0.460757,
+      "num_params": 67895296,
+      "sparsity": 0.4318,
+      "alpha": 0.029095
+    },
+    {
+      "name": "model.layers.2.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.2.mlp.gate_proj.weight",
+      "relative_error": 0.460786,
+      "num_params": 67895296,
+      "sparsity": 0.4877,
+      "alpha": 0.028255
+    },
+    {
+      "name": "model.layers.4.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.4.self_attn.v_proj.weight",
+      "relative_error": 0.461252,
+      "num_params": 1835008,
+      "sparsity": 0.4461,
+      "alpha": 0.027292
+    },
+    {
+      "name": "model.layers.12.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.12.self_attn.v_proj.weight",
+      "relative_error": 0.461459,
+      "num_params": 1835008,
+      "sparsity": 0.4412,
+      "alpha": 0.027368
+    },
+    {
+      "name": "model.layers.26.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.26.self_attn.o_proj.weight",
+      "relative_error": 0.461681,
+      "num_params": 12845056,
+      "sparsity": 0.4374,
+      "alpha": 0.050075
+    },
+    {
+      "name": "model.layers.3.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.3.self_attn.v_proj.weight",
+      "relative_error": 0.463176,
+      "num_params": 1835008,
+      "sparsity": 0.4449,
+      "alpha": 0.023812
+    },
+    {
+      "name": "model.layers.7.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.7.self_attn.o_proj.weight",
+      "relative_error": 0.463707,
+      "num_params": 12845056,
+      "sparsity": 0.4374,
+      "alpha": 0.041853
+    },
+    {
+      "name": "model.layers.23.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.23.self_attn.o_proj.weight",
+      "relative_error": 0.46417,
+      "num_params": 12845056,
+      "sparsity": 0.4348,
+      "alpha": 0.046145
+    },
+    {
+      "name": "model.layers.12.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.12.self_attn.o_proj.weight",
+      "relative_error": 0.464659,
+      "num_params": 12845056,
+      "sparsity": 0.439,
+      "alpha": 0.039531
+    },
+    {
+      "name": "model.layers.25.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.25.self_attn.q_proj.weight",
+      "relative_error": 0.464742,
+      "num_params": 12845056,
+      "sparsity": 0.4427,
+      "alpha": 0.026345
+    },
+    {
+      "name": "model.layers.3.mlp.down_proj.weight",
+      "canonical_name": "model.layers.3.mlp.down_proj.weight",
+      "relative_error": 0.465405,
+      "num_params": 67895296,
+      "sparsity": 0.4324,
+      "alpha": 0.028454
+    },
+    {
+      "name": "model.layers.6.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.6.self_attn.q_proj.weight",
+      "relative_error": 0.465466,
+      "num_params": 12845056,
+      "sparsity": 0.4414,
+      "alpha": 0.030309
+    },
+    {
+      "name": "model.layers.17.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.17.self_attn.v_proj.weight",
+      "relative_error": 0.465594,
+      "num_params": 1835008,
+      "sparsity": 0.4442,
+      "alpha": 0.030481
+    },
+    {
+      "name": "model.layers.7.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.7.self_attn.v_proj.weight",
+      "relative_error": 0.465757,
+      "num_params": 1835008,
+      "sparsity": 0.443,
+      "alpha": 0.031194
+    },
+    {
+      "name": "model.layers.27.mlp.down_proj.weight",
+      "canonical_name": "model.layers.27.mlp.down_proj.weight",
+      "relative_error": 0.465808,
+      "num_params": 67895296,
+      "sparsity": 0.4373,
+      "alpha": 0.029292
+    },
+    {
+      "name": "model.layers.24.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.24.self_attn.q_proj.weight",
+      "relative_error": 0.46588,
+      "num_params": 12845056,
+      "sparsity": 0.4435,
+      "alpha": 0.027331
+    },
+    {
+      "name": "model.layers.4.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.4.self_attn.o_proj.weight",
+      "relative_error": 0.465987,
+      "num_params": 12845056,
+      "sparsity": 0.4357,
+      "alpha": 0.037626
+    },
+    {
+      "name": "model.layers.11.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.11.self_attn.o_proj.weight",
+      "relative_error": 0.466143,
+      "num_params": 12845056,
+      "sparsity": 0.4383,
+      "alpha": 0.039416
+    },
+    {
+      "name": "model.layers.18.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.18.self_attn.v_proj.weight",
+      "relative_error": 0.466826,
+      "num_params": 1835008,
+      "sparsity": 0.4436,
+      "alpha": 0.033709
+    },
+    {
+      "name": "model.layers.13.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.13.self_attn.v_proj.weight",
+      "relative_error": 0.466888,
+      "num_params": 1835008,
+      "sparsity": 0.4441,
+      "alpha": 0.029774
+    },
+    {
+      "name": "model.layers.3.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.3.self_attn.q_proj.weight",
+      "relative_error": 0.466896,
+      "num_params": 12845056,
+      "sparsity": 0.4438,
+      "alpha": 0.031036
+    },
+    {
+      "name": "model.layers.19.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.19.self_attn.v_proj.weight",
+      "relative_error": 0.46768,
+      "num_params": 1835008,
+      "sparsity": 0.442,
+      "alpha": 0.035158
+    },
+    {
+      "name": "model.layers.23.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.23.self_attn.q_proj.weight",
+      "relative_error": 0.46779,
+      "num_params": 12845056,
+      "sparsity": 0.4464,
+      "alpha": 0.028294
+    },
+    {
+      "name": "model.layers.7.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.7.self_attn.q_proj.weight",
+      "relative_error": 0.467884,
+      "num_params": 12845056,
+      "sparsity": 0.439,
+      "alpha": 0.02923
+    },
+    {
+      "name": "model.layers.16.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.16.self_attn.o_proj.weight",
+      "relative_error": 0.468234,
+      "num_params": 12845056,
+      "sparsity": 0.4411,
+      "alpha": 0.040697
+    },
+    {
+      "name": "model.layers.13.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.13.self_attn.q_proj.weight",
+      "relative_error": 0.468255,
+      "num_params": 12845056,
+      "sparsity": 0.4413,
+      "alpha": 0.029658
+    },
+    {
+      "name": "model.layers.14.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.14.self_attn.v_proj.weight",
+      "relative_error": 0.468439,
+      "num_params": 1835008,
+      "sparsity": 0.4465,
+      "alpha": 0.027455
+    },
+    {
+      "name": "model.layers.10.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.10.self_attn.q_proj.weight",
+      "relative_error": 0.4688,
+      "num_params": 12845056,
+      "sparsity": 0.4418,
+      "alpha": 0.03041
+    },
+    {
+      "name": "model.layers.20.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.20.self_attn.q_proj.weight",
+      "relative_error": 0.469091,
+      "num_params": 12845056,
+      "sparsity": 0.4418,
+      "alpha": 0.027822
+    },
+    {
+      "name": "model.layers.0.mlp.up_proj.weight",
+      "canonical_name": "model.layers.0.mlp.up_proj.weight",
+      "relative_error": 0.469315,
+      "num_params": 67895296,
+      "sparsity": 0.4845,
+      "alpha": 0.023681
+    },
+    {
+      "name": "model.layers.17.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.17.self_attn.o_proj.weight",
+      "relative_error": 0.469677,
+      "num_params": 12845056,
+      "sparsity": 0.4396,
+      "alpha": 0.040518
+    },
+    {
+      "name": "model.layers.9.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.9.self_attn.o_proj.weight",
+      "relative_error": 0.470039,
+      "num_params": 12845056,
+      "sparsity": 0.4419,
+      "alpha": 0.042086
+    },
+    {
+      "name": "model.layers.2.mlp.down_proj.weight",
+      "canonical_name": "model.layers.2.mlp.down_proj.weight",
+      "relative_error": 0.470706,
+      "num_params": 67895296,
+      "sparsity": 0.4941,
+      "alpha": 0.026271
+    },
+    {
+      "name": "model.layers.20.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.20.self_attn.o_proj.weight",
+      "relative_error": 0.470796,
+      "num_params": 12845056,
+      "sparsity": 0.4377,
+      "alpha": 0.043833
+    },
+    {
+      "name": "model.layers.1.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.1.self_attn.o_proj.weight",
+      "relative_error": 0.470943,
+      "num_params": 12845056,
+      "sparsity": 0.4353,
+      "alpha": 0.035754
+    },
+    {
+      "name": "model.layers.8.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.8.self_attn.o_proj.weight",
+      "relative_error": 0.471321,
+      "num_params": 12845056,
+      "sparsity": 0.44,
+      "alpha": 0.039206
+    },
+    {
+      "name": "model.layers.20.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.20.self_attn.v_proj.weight",
+      "relative_error": 0.471554,
+      "num_params": 1835008,
+      "sparsity": 0.445,
+      "alpha": 0.036514
+    },
+    {
+      "name": "model.layers.19.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.19.self_attn.o_proj.weight",
+      "relative_error": 0.471641,
+      "num_params": 12845056,
+      "sparsity": 0.4407,
+      "alpha": 0.043015
+    },
+    {
+      "name": "model.layers.2.mlp.up_proj.weight",
+      "canonical_name": "model.layers.2.mlp.up_proj.weight",
+      "relative_error": 0.472188,
+      "num_params": 67895296,
+      "sparsity": 0.4975,
+      "alpha": 0.023898
+    },
+    {
+      "name": "model.layers.11.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.11.self_attn.q_proj.weight",
+      "relative_error": 0.47225,
+      "num_params": 12845056,
+      "sparsity": 0.4457,
+      "alpha": 0.030883
+    },
+    {
+      "name": "model.layers.0.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.0.self_attn.k_proj.weight",
+      "relative_error": 0.472742,
+      "num_params": 1835008,
+      "sparsity": 0.453,
+      "alpha": 0.042772
+    },
+    {
+      "name": "model.layers.6.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.6.self_attn.o_proj.weight",
+      "relative_error": 0.473022,
+      "num_params": 12845056,
+      "sparsity": 0.4379,
+      "alpha": 0.038583
+    },
+    {
+      "name": "model.layers.10.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.10.self_attn.o_proj.weight",
+      "relative_error": 0.473037,
+      "num_params": 12845056,
+      "sparsity": 0.4389,
+      "alpha": 0.040106
+    },
+    {
+      "name": "model.layers.16.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.16.self_attn.q_proj.weight",
+      "relative_error": 0.473115,
+      "num_params": 12845056,
+      "sparsity": 0.4436,
+      "alpha": 0.028532
+    },
+    {
+      "name": "model.layers.8.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.8.self_attn.q_proj.weight",
+      "relative_error": 0.473454,
+      "num_params": 12845056,
+      "sparsity": 0.4462,
+      "alpha": 0.030397
+    },
+    {
+      "name": "model.layers.1.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.1.self_attn.v_proj.weight",
+      "relative_error": 0.473531,
+      "num_params": 1835008,
+      "sparsity": 0.4696,
+      "alpha": 0.024221
+    },
+    {
+      "name": "model.layers.12.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.12.self_attn.q_proj.weight",
+      "relative_error": 0.47355,
+      "num_params": 12845056,
+      "sparsity": 0.4437,
+      "alpha": 0.030216
+    },
+    {
+      "name": "model.layers.2.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.2.self_attn.q_proj.weight",
+      "relative_error": 0.47362,
+      "num_params": 12845056,
+      "sparsity": 0.4539,
+      "alpha": 0.030454
+    },
+    {
+      "name": "model.layers.4.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.4.self_attn.q_proj.weight",
+      "relative_error": 0.474301,
+      "num_params": 12845056,
+      "sparsity": 0.4505,
+      "alpha": 0.029372
+    },
+    {
+      "name": "model.layers.18.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.18.self_attn.q_proj.weight",
+      "relative_error": 0.474527,
+      "num_params": 12845056,
+      "sparsity": 0.4513,
+      "alpha": 0.027653
+    },
+    {
+      "name": "model.layers.5.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.5.self_attn.q_proj.weight",
+      "relative_error": 0.474778,
+      "num_params": 12845056,
+      "sparsity": 0.4452,
+      "alpha": 0.029871
+    },
+    {
+      "name": "model.layers.9.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.9.self_attn.q_proj.weight",
+      "relative_error": 0.475429,
+      "num_params": 12845056,
+      "sparsity": 0.4423,
+      "alpha": 0.028524
+    },
+    {
+      "name": "model.layers.3.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.3.self_attn.k_proj.weight",
+      "relative_error": 0.476059,
+      "num_params": 1835008,
+      "sparsity": 0.4564,
+      "alpha": 0.037613
+    },
+    {
+      "name": "model.layers.19.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.19.self_attn.q_proj.weight",
+      "relative_error": 0.477129,
+      "num_params": 12845056,
+      "sparsity": 0.4466,
+      "alpha": 0.026785
+    },
+    {
+      "name": "model.layers.0.mlp.down_proj.weight",
+      "canonical_name": "model.layers.0.mlp.down_proj.weight",
+      "relative_error": 0.477461,
+      "num_params": 67895296,
+      "sparsity": 0.4914,
+      "alpha": 0.025693
+    },
+    {
+      "name": "model.layers.21.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.21.self_attn.o_proj.weight",
+      "relative_error": 0.477682,
+      "num_params": 12845056,
+      "sparsity": 0.4419,
+      "alpha": 0.045364
+    },
+    {
+      "name": "model.layers.15.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.15.self_attn.o_proj.weight",
+      "relative_error": 0.477954,
+      "num_params": 12845056,
+      "sparsity": 0.4403,
+      "alpha": 0.039333
+    },
+    {
+      "name": "model.layers.14.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.14.self_attn.o_proj.weight",
+      "relative_error": 0.478154,
+      "num_params": 12845056,
+      "sparsity": 0.4436,
+      "alpha": 0.039067
+    },
+    {
+      "name": "model.layers.6.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.6.self_attn.k_proj.weight",
+      "relative_error": 0.478503,
+      "num_params": 1835008,
+      "sparsity": 0.4599,
+      "alpha": 0.035323
+    },
+    {
+      "name": "model.layers.26.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.26.self_attn.q_proj.weight",
+      "relative_error": 0.478997,
+      "num_params": 12845056,
+      "sparsity": 0.4513,
+      "alpha": 0.025539
+    },
+    {
+      "name": "model.layers.21.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.21.self_attn.q_proj.weight",
+      "relative_error": 0.479911,
+      "num_params": 12845056,
+      "sparsity": 0.4483,
+      "alpha": 0.027038
+    },
+    {
+      "name": "model.layers.27.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.27.self_attn.k_proj.weight",
+      "relative_error": 0.480783,
+      "num_params": 1835008,
+      "sparsity": 0.4534,
+      "alpha": 0.022052
+    },
+    {
+      "name": "model.layers.27.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.27.self_attn.q_proj.weight",
+      "relative_error": 0.480847,
+      "num_params": 12845056,
+      "sparsity": 0.4555,
+      "alpha": 0.027486
+    },
+    {
+      "name": "model.layers.10.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.10.self_attn.k_proj.weight",
+      "relative_error": 0.481197,
+      "num_params": 1835008,
+      "sparsity": 0.4537,
+      "alpha": 0.033442
+    },
+    {
+      "name": "model.layers.24.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.24.self_attn.v_proj.weight",
+      "relative_error": 0.481208,
+      "num_params": 1835008,
+      "sparsity": 0.447,
+      "alpha": 0.042123
+    },
+    {
+      "name": "model.layers.17.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.17.self_attn.q_proj.weight",
+      "relative_error": 0.481709,
+      "num_params": 12845056,
+      "sparsity": 0.4493,
+      "alpha": 0.029168
+    },
+    {
+      "name": "model.layers.7.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.7.self_attn.k_proj.weight",
+      "relative_error": 0.481839,
+      "num_params": 1835008,
+      "sparsity": 0.4526,
+      "alpha": 0.029662
+    },
+    {
+      "name": "model.layers.18.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.18.self_attn.o_proj.weight",
+      "relative_error": 0.482036,
+      "num_params": 12845056,
+      "sparsity": 0.4465,
+      "alpha": 0.042717
+    },
+    {
+      "name": "model.layers.21.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.21.self_attn.v_proj.weight",
+      "relative_error": 0.48221,
+      "num_params": 1835008,
+      "sparsity": 0.4515,
+      "alpha": 0.038081
+    },
+    {
+      "name": "model.layers.13.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.13.self_attn.o_proj.weight",
+      "relative_error": 0.483858,
+      "num_params": 12845056,
+      "sparsity": 0.4434,
+      "alpha": 0.040758
+    },
+    {
+      "name": "model.layers.3.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.3.self_attn.o_proj.weight",
+      "relative_error": 0.483905,
+      "num_params": 12845056,
+      "sparsity": 0.4381,
+      "alpha": 0.037519
+    },
+    {
+      "name": "model.layers.15.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.15.self_attn.q_proj.weight",
+      "relative_error": 0.484031,
+      "num_params": 12845056,
+      "sparsity": 0.4517,
+      "alpha": 0.029733
+    },
+    {
+      "name": "model.layers.20.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.20.self_attn.k_proj.weight",
+      "relative_error": 0.484059,
+      "num_params": 1835008,
+      "sparsity": 0.451,
+      "alpha": 0.024929
+    },
+    {
+      "name": "model.layers.18.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.18.self_attn.k_proj.weight",
+      "relative_error": 0.485226,
+      "num_params": 1835008,
+      "sparsity": 0.4558,
+      "alpha": 0.026583
+    },
+    {
+      "name": "model.layers.22.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.22.self_attn.q_proj.weight",
+      "relative_error": 0.485316,
+      "num_params": 12845056,
+      "sparsity": 0.4557,
+      "alpha": 0.027573
+    },
+    {
+      "name": "model.layers.1.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.1.mlp.gate_proj.weight",
+      "relative_error": 0.486724,
+      "num_params": 67895296,
+      "sparsity": 0.5653,
+      "alpha": 0.026038
+    },
+    {
+      "name": "model.layers.4.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.4.self_attn.k_proj.weight",
+      "relative_error": 0.487038,
+      "num_params": 1835008,
+      "sparsity": 0.4667,
+      "alpha": 0.03472
+    },
+    {
+      "name": "model.layers.14.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.14.self_attn.q_proj.weight",
+      "relative_error": 0.489021,
+      "num_params": 12845056,
+      "sparsity": 0.4528,
+      "alpha": 0.028841
+    },
+    {
+      "name": "model.layers.0.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.0.self_attn.o_proj.weight",
+      "relative_error": 0.489384,
+      "num_params": 12845056,
+      "sparsity": 0.4439,
+      "alpha": 0.031687
+    },
+    {
+      "name": "model.layers.13.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.13.self_attn.k_proj.weight",
+      "relative_error": 0.489765,
+      "num_params": 1835008,
+      "sparsity": 0.4615,
+      "alpha": 0.03097
+    },
+    {
+      "name": "model.layers.25.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.25.self_attn.k_proj.weight",
+      "relative_error": 0.49025,
+      "num_params": 1835008,
+      "sparsity": 0.4561,
+      "alpha": 0.020192
+    },
+    {
+      "name": "model.layers.21.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.21.self_attn.k_proj.weight",
+      "relative_error": 0.492721,
+      "num_params": 1835008,
+      "sparsity": 0.4536,
+      "alpha": 0.022468
+    },
+    {
+      "name": "model.layers.26.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.26.self_attn.k_proj.weight",
+      "relative_error": 0.492838,
+      "num_params": 1835008,
+      "sparsity": 0.4604,
+      "alpha": 0.020943
+    },
+    {
+      "name": "model.layers.24.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.24.self_attn.k_proj.weight",
+      "relative_error": 0.493262,
+      "num_params": 1835008,
+      "sparsity": 0.4651,
+      "alpha": 0.023578
+    },
+    {
+      "name": "model.layers.2.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.2.self_attn.k_proj.weight",
+      "relative_error": 0.49334,
+      "num_params": 1835008,
+      "sparsity": 0.4674,
+      "alpha": 0.038471
+    },
+    {
+      "name": "model.layers.23.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.23.self_attn.k_proj.weight",
+      "relative_error": 0.49338,
+      "num_params": 1835008,
+      "sparsity": 0.46,
+      "alpha": 0.023589
+    },
+    {
+      "name": "model.layers.1.mlp.down_proj.weight",
+      "canonical_name": "model.layers.1.mlp.down_proj.weight",
+      "relative_error": 0.496338,
+      "num_params": 67895296,
+      "sparsity": 0.5706,
+      "alpha": 0.024159
+    },
+    {
+      "name": "model.layers.5.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.5.self_attn.k_proj.weight",
+      "relative_error": 0.49818,
+      "num_params": 1835008,
+      "sparsity": 0.4635,
+      "alpha": 0.033146
+    },
+    {
+      "name": "model.layers.22.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.22.self_attn.v_proj.weight",
+      "relative_error": 0.498598,
+      "num_params": 1835008,
+      "sparsity": 0.4543,
+      "alpha": 0.037302
+    },
+    {
+      "name": "model.layers.17.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.17.self_attn.k_proj.weight",
+      "relative_error": 0.498684,
+      "num_params": 1835008,
+      "sparsity": 0.46,
+      "alpha": 0.028122
+    },
+    {
+      "name": "model.layers.9.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.9.self_attn.k_proj.weight",
+      "relative_error": 0.500789,
+      "num_params": 1835008,
+      "sparsity": 0.4594,
+      "alpha": 0.029045
+    },
+    {
+      "name": "model.layers.19.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.19.self_attn.k_proj.weight",
+      "relative_error": 0.501746,
+      "num_params": 1835008,
+      "sparsity": 0.4623,
+      "alpha": 0.023479
+    },
+    {
+      "name": "model.layers.11.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.11.self_attn.k_proj.weight",
+      "relative_error": 0.502314,
+      "num_params": 1835008,
+      "sparsity": 0.465,
+      "alpha": 0.033776
+    },
+    {
+      "name": "model.layers.1.mlp.up_proj.weight",
+      "canonical_name": "model.layers.1.mlp.up_proj.weight",
+      "relative_error": 0.503999,
+      "num_params": 67895296,
+      "sparsity": 0.5751,
+      "alpha": 0.021988
+    },
+    {
+      "name": "model.layers.27.self_attn.o_proj.weight",
+      "canonical_name": "model.layers.27.self_attn.o_proj.weight",
+      "relative_error": 0.504043,
+      "num_params": 12845056,
+      "sparsity": 0.4687,
+      "alpha": 0.045617
+    },
+    {
+      "name": "model.layers.12.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.12.self_attn.k_proj.weight",
+      "relative_error": 0.504296,
+      "num_params": 1835008,
+      "sparsity": 0.4663,
+      "alpha": 0.032825
+    },
+    {
+      "name": "model.layers.22.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.22.self_attn.k_proj.weight",
+      "relative_error": 0.50582,
+      "num_params": 1835008,
+      "sparsity": 0.4653,
+      "alpha": 0.02224
+    },
+    {
+      "name": "model.layers.8.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.8.self_attn.k_proj.weight",
+      "relative_error": 0.505871,
+      "num_params": 1835008,
+      "sparsity": 0.4707,
+      "alpha": 0.032914
+    },
+    {
+      "name": "model.layers.16.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.16.self_attn.k_proj.weight",
+      "relative_error": 0.506191,
+      "num_params": 1835008,
+      "sparsity": 0.4641,
+      "alpha": 0.027484
+    },
+    {
+      "name": "model.layers.25.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.25.self_attn.v_proj.weight",
+      "relative_error": 0.507415,
+      "num_params": 1835008,
+      "sparsity": 0.4613,
+      "alpha": 0.043919
+    },
+    {
+      "name": "model.layers.27.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.27.self_attn.v_proj.weight",
+      "relative_error": 0.509858,
+      "num_params": 1835008,
+      "sparsity": 0.4478,
+      "alpha": 0.039952
+    },
+    {
+      "name": "model.layers.23.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.23.self_attn.v_proj.weight",
+      "relative_error": 0.510446,
+      "num_params": 1835008,
+      "sparsity": 0.4592,
+      "alpha": 0.037692
+    },
+    {
+      "name": "model.layers.0.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.0.self_attn.q_proj.weight",
+      "relative_error": 0.512278,
+      "num_params": 12845056,
+      "sparsity": 0.4545,
+      "alpha": 0.032009
+    },
+    {
+      "name": "model.layers.15.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.15.self_attn.k_proj.weight",
+      "relative_error": 0.514643,
+      "num_params": 1835008,
+      "sparsity": 0.4692,
+      "alpha": 0.031305
+    },
+    {
+      "name": "model.layers.0.mlp.gate_proj.weight",
+      "canonical_name": "model.layers.0.mlp.gate_proj.weight",
+      "relative_error": 0.515579,
+      "num_params": 67895296,
+      "sparsity": 0.4923,
+      "alpha": 0.025557
+    },
+    {
+      "name": "model.layers.26.self_attn.v_proj.weight",
+      "canonical_name": "model.layers.26.self_attn.v_proj.weight",
+      "relative_error": 0.519083,
+      "num_params": 1835008,
+      "sparsity": 0.4636,
+      "alpha": 0.04978
+    },
+    {
+      "name": "model.layers.14.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.14.self_attn.k_proj.weight",
+      "relative_error": 0.526954,
+      "num_params": 1835008,
+      "sparsity": 0.4828,
+      "alpha": 0.029971
+    },
+    {
+      "name": "model.layers.1.self_attn.k_proj.weight",
+      "canonical_name": "model.layers.1.self_attn.k_proj.weight",
+      "relative_error": 0.535013,
+      "num_params": 1835008,
+      "sparsity": 0.5173,
+      "alpha": 0.034588
+    },
+    {
+      "name": "model.layers.1.self_attn.q_proj.weight",
+      "canonical_name": "model.layers.1.self_attn.q_proj.weight",
+      "relative_error": 0.544574,
+      "num_params": 12845056,
+      "sparsity": 0.511,
+      "alpha": 0.024128
+    }
+  ]
+}

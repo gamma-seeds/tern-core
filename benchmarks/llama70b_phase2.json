@@ -1,0 +1,52 @@
+{
+  "runner": "bench_llama70b_phase2.py",
+  "model_path": "/Users/syn/synapticode/tern-core/llama70b-v0.6.0.mlpackage",
+  "timestamp_utc": "2026-04-12T00:17:42.919349+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "compute_units": "CPU_AND_NE",
+  "watchdog": {
+    "compressor_trip_pages": 1800000,
+    "available_floor_pages": 32768,
+    "poll_s": 2.0
+  },
+  "stage": "spec_loaded",
+  "inputs": [
+    {
+      "name": "input_ids",
+      "feature_type": "multiArrayType",
+      "dtype": "INT32",
+      "declared_shape": [
+        1,
+        512
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "logits",
+      "feature_type": "multiArrayType"
+    }
+  ],
+  "concrete_input_shapes": {
+    "input_ids": {
+      "shape": [
+        1,
+        512
+      ],
+      "dtype": "int32",
+      "nbytes": 2048
+    }
+  },
+  "rss_mb": {
+    "start": 313.328125,
+    "before_load": 324.8125
+  },
+  "timings_s": {},
+  "output_shapes": {},
+  "error": null,
+  "spec_version": 9,
+  "model_type": "mlProgram"
+}

@@ -1,0 +1,144 @@
+{
+  "runner": "bench_gemma3_12b_phase2.py",
+  "model_path": "/Users/syn/synapticode/models/coreml/dsr1-14b/dsr1_14b_ternary_v0.1.0.mlpackage",
+  "timestamp_utc": "2026-04-17T23:37:46.710205+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "seq_len": 64,
+  "warmup_runs": 10,
+  "benchmark_runs": 50,
+  "stage": "done",
+  "spec": {
+    "input_name": "input_ids",
+    "input_dtype": "INT32",
+    "input_shape": [
+      1,
+      512
+    ],
+    "output_name": "logits",
+    "spec_version": 9
+  },
+  "raw_benchmarks": {
+    "ALL": {
+      "compute_units": "ALL",
+      "load_seconds": 26.15356383300059,
+      "latency_mean_ms": 2294.431920059924,
+      "latency_median_ms": 2222.336353999708,
+      "latency_min_ms": 2104.397541999788,
+      "latency_max_ms": 2547.4188749994937,
+      "latency_stdev_ms": 151.14631871758777,
+      "tokens_per_second": 27.893614728968952,
+      "peak_rss_mb": 22518.046875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "CPU_AND_NE",
+      "load_seconds": 1655.7627176670003,
+      "latency_mean_ms": 13739.23043498009,
+      "latency_median_ms": 13755.210770500526,
+      "latency_min_ms": 13640.036124999824,
+      "latency_max_ms": 13855.735791999905,
+      "latency_stdev_ms": 67.5269936075917,
+      "tokens_per_second": 4.65819394345814,
+      "peak_rss_mb": 51679.46875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "CPU_AND_GPU",
+      "load_seconds": 22.47994475000087,
+      "latency_mean_ms": 2189.8696182798813,
+      "latency_median_ms": 2115.382124999087,
+      "latency_min_ms": 2054.6409170001425,
+      "latency_max_ms": 2430.1760839989583,
+      "latency_stdev_ms": 149.18402268085453,
+      "tokens_per_second": 29.22548423237695,
+      "peak_rss_mb": 51679.46875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "palettised_benchmarks": {
+    "ALL": {
+      "compute_units": "2bit_ALL",
+      "load_seconds": 48.28760599999987,
+      "latency_mean_ms": 2189.7318266998627,
+      "latency_median_ms": 2124.384166500022,
+      "latency_min_ms": 2067.6679170010175,
+      "latency_max_ms": 2385.3764170016802,
+      "latency_stdev_ms": 123.8867452828913,
+      "tokens_per_second": 29.22732328207248,
+      "peak_rss_mb": 51679.46875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "2bit_CPU_AND_NE",
+      "skipped": true,
+      "reason": "load_timeout_guard",
+      "probe_elapsed_s": 60.05302608300008,
+      "timeout_budget_s": 60.0
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "2bit_CPU_AND_GPU",
+      "load_seconds": 14.330058624998856,
+      "latency_mean_ms": 2189.4677325200246,
+      "latency_median_ms": 2125.3546874995664,
+      "latency_min_ms": 2067.1311669993884,
+      "latency_max_ms": 2381.836333001047,
+      "latency_stdev_ms": 115.25240191181476,
+      "tokens_per_second": 29.230848689575133,
+      "peak_rss_mb": 51679.46875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "model_sizes_mb": {
+    "raw": 9964.983947753906,
+    "palettised_2bit": 7366.129757881165
+  },
+  "energy": {
+    "raw_best": {
+      "label": "raw_CPU_AND_GPU",
+      "power_mean_w": 26.21,
+      "power_median_w": 27.505499999999998,
+      "power_stdev_w": 3.98564414251564,
+      "power_samples": 14,
+      "inferences": 7,
+      "energy_per_inference_mj": 56164.28571428572
+    },
+    "pal_best": {
+      "label": "2bit_CPU_AND_GPU",
+      "power_mean_w": 25.933857142857143,
+      "power_median_w": 27.430500000000002,
+      "power_stdev_w": 3.7679379967367765,
+      "power_samples": 14,
+      "inferences": 7,
+      "energy_per_inference_mj": 55572.551020408166
+    }
+  },
+  "error": null,
+  "validation": {
+    "load_s": 20.328128208000635,
+    "predict_s": 2.391346959000657,
+    "output_shapes": {
+      "logits": [
+        1,
+        512,
+        152064
+      ]
+    },
+    "rss_mb": 22129.984375
+  },
+  "palettise_seconds": 305.61697212500076,
+  "peak_rss_mb": 51679.46875,
+  "watchdog_last_sample": {
+    "ts": "2026-04-18T00:38:14.558522+00:00",
+    "comp": 101175,
+    "free": 1480603,
+    "spec": 131273
+  }
+}

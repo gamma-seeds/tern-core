@@ -1,0 +1,49 @@
+scikit-learn version 1.8.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.
+Input: input_ids INT32 [1, 64]
+
+  [CPU_ONLY] loading...
+  [CPU_ONLY] loaded in 58.5s
+  [CPU_ONLY] warmup 10 runs...
+  [CPU_ONLY] sustained inference for 15s...
+  [CPU_ONLY] 210.16 ms mean, 304.5 tok/s, 72 inferences, stdev 4.58 ms
+
+  [CPU_AND_GPU] loading...
+  [CPU_AND_GPU] loaded in 43.7s
+  [CPU_AND_GPU] warmup 10 runs...
+  [CPU_AND_GPU] sustained inference for 15s...
+  [CPU_AND_GPU] 165.02 ms mean, 387.8 tok/s, 91 inferences, stdev 0.89 ms
+
+  sudo available — running energy profiles...
+
+  [energy:CPU_ONLY] sustained inference for 15s...
+  [energy:CPU_ONLY] 5.46 W mean, 1137.1 mJ/inference, 72 inferences, stdev 0.96 W
+
+  [energy:CPU_AND_GPU] sustained inference for 15s...
+  [energy:CPU_AND_GPU] 20.14 W mean, 3320.1 mJ/inference, 91 inferences, stdev 3.76 W
+
+{
+  "CPU_ONLY": {
+    "compute_units": "CPU_ONLY",
+    "mean_latency_ms": 210.16,
+    "tokens_per_second": 304.5,
+    "stdev_ms": 4.58,
+    "inferences": 72,
+    "sustain_seconds": 15,
+    "mean_power_w": 5.458,
+    "stdev_power_w": 0.955,
+    "mj_per_inference": 1137.1,
+    "power_samples": 14
+  },
+  "CPU_AND_GPU": {
+    "compute_units": "CPU_AND_GPU",
+    "mean_latency_ms": 165.02,
+    "tokens_per_second": 387.8,
+    "stdev_ms": 0.89,
+    "inferences": 91,
+    "sustain_seconds": 15,
+    "mean_power_w": 20.142,
+    "stdev_power_w": 3.755,
+    "mj_per_inference": 3320.1,
+    "power_samples": 14
+  }
+}
