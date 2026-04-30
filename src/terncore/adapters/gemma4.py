@@ -58,23 +58,6 @@ _PROJ_PRIORITY = [
     "down_proj",     # expert down projection (same name, inside .experts.)
 ]
 
-# Patterns that identify non-language components in multimodal models.
-_VISION_PATTERNS = (
-    "vision_tower",
-    "vision_model",
-    "embed_vision",
-)
-
-_AUDIO_PATTERNS = (
-    "audio_tower",
-    "embed_audio",
-)
-
-_PROJECTOR_PATTERNS = (
-    "multi_modal_projector",
-    "multimodal_projector",
-)
-
 # Patterns for weights that must always stay in FP16.
 _ALWAYS_PROTECTED = (
     "embed_tokens",
@@ -96,18 +79,6 @@ _ALWAYS_PROTECTED = (
 )
 
 
-def _detect_component(name: str) -> str:
-    """Classify which model component a weight belongs to."""
-    name_lower = name.lower()
-    if any(p in name_lower for p in _VISION_PATTERNS):
-        return "vision"
-    if any(p in name_lower for p in _AUDIO_PATTERNS):
-        return "audio"
-    if any(p in name_lower for p in _PROJECTOR_PATTERNS):
-        return "projector"
-    return "language"
-
-
 @register("gemma4")
 class Gemma4Adapter(ArchitectureAdapter):
     """Architecture adapter for Gemma 4 (text-only and E4B multimodal).
@@ -123,10 +94,24 @@ class Gemma4Adapter(ArchitectureAdapter):
     5. All remaining 2-D weights in transformer blocks → ternary-eligible.
     """
 
+    _VISION_PATTERNS: list[str] = [
+        "vision_tower",
+        "vision_model",
+        "embed_vision",
+    ]
+    _AUDIO_PATTERNS: list[str] = [
+        "audio_tower",
+        "embed_audio",
+    ]
+    _PROJECTOR_PATTERNS: list[str] = [
+        "multi_modal_projector",
+        "multimodal_projector",
+    ]
+
     def info(self) -> AdapterInfo:
         return AdapterInfo(
             name="gemma4",
-            architecture="Gemma4ForConditionalGeneration",
+            architectures=["Gemma4ForConditionalGeneration"],
             model_type="gemma4",
             description=(
                 "Google Gemma 4 adapter — supports text-only and E4B "
@@ -164,7 +149,7 @@ class Gemma4Adapter(ArchitectureAdapter):
     ) -> WeightClassification:
         """Classify a weight tensor for conversion."""
         canonical = self.normalize_name(name)
-        component = _detect_component(name)
+        component = self._detect_component(name)
 
         # Rule 1–2: Non-language components → FP16-retain
         if component == "vision":
@@ -222,42 +207,3 @@ class Gemma4Adapter(ArchitectureAdapter):
             reason="2-D weight in transformer block — eligible for ternary conversion",
             component=component,
         )
-
-    def classify_all(
-        self,
-        weight_names: dict[str, list[int]],
-    ) -> dict[str, WeightClassification]:
-        """Classify all weights in a model.
-
-        Args:
-            weight_names: Mapping of weight name → shape.
-
-        Returns:
-            Mapping of weight name → WeightClassification.
-        """
-        return {
-            name: self.classify_weight(name, shape)
-            for name, shape in weight_names.items()
-        }
-
-    def get_protection_list(
-        self,
-        weight_names: dict[str, list[int]],
-    ) -> list[str]:
-        """Return list of weight names that should be FP16-retained."""
-        classifications = self.classify_all(weight_names)
-        return [
-            name for name, cls in classifications.items()
-            if cls.category == "fp16_retain"
-        ]
-
-    def get_ternary_eligible(
-        self,
-        weight_names: dict[str, list[int]],
-    ) -> list[str]:
-        """Return list of weight names eligible for ternary conversion."""
-        classifications = self.classify_all(weight_names)
-        return [
-            name for name, cls in classifications.items()
-            if cls.category == "ternary_eligible"
-        ]

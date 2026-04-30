@@ -10,12 +10,15 @@ Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from terncore.adapters.base import ArchitectureAdapter
 
 _REGISTRY: dict[str, type["ArchitectureAdapter"]] = {}
+
+_KNOWN_ADAPTERS = ["llama", "gemma3", "gemma4"]
 
 
 def register(name: str):
@@ -30,24 +33,20 @@ def get_adapter(name: str) -> "ArchitectureAdapter":
     """Instantiate a registered adapter by name.
 
     Triggers lazy imports so that adapter modules are only loaded
-    when requested.
+    when requested. Adapter names are matched case-insensitively
+    against ``_KNOWN_ADAPTERS``; on first request, the matching
+    module is imported and self-registers via the ``@register``
+    decorator.
     """
     key = name.lower()
     if key not in _REGISTRY:
-        # Trigger lazy registration via import
-        if key == "gemma4":
-            import terncore.adapters.gemma4  # noqa: F401
-        elif key == "llama":
-            import terncore.adapters.llama  # noqa: F401
-        elif key == "gemma3":
-            import terncore.adapters.gemma3  # noqa: F401
-        else:
+        if key not in _KNOWN_ADAPTERS:
             raise ValueError(
-                f"Unknown adapter '{name}'. "
-                f"Available: {sorted(_REGISTRY.keys()) or ['gemma4', 'llama']}"
+                f"Unknown adapter: {name}. Known: {_KNOWN_ADAPTERS}"
             )
+        importlib.import_module(f"terncore.adapters.{key}")
     cls = _REGISTRY[key]
     return cls()
 
 
-__all__ = ["register", "get_adapter"]
+__all__ = ["register", "get_adapter", "_KNOWN_ADAPTERS"]

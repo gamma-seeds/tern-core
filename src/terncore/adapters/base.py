@@ -11,7 +11,19 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Literal, Optional
+
+
+class ArchitectureMismatch(Exception):
+    """Raised when a model's HF config architecture does not match
+    any architecture declared by the adapter, or when the
+    architecture cannot be read from the model's ``config.json``.
+
+    The error message names both sides (adapter and offending
+    architecture) so the operator can either route to a different
+    adapter or update the adapter's allow-list if the model is
+    genuinely architecture-shape-compatible.
+    """
 
 
 @dataclass(frozen=True)
@@ -23,6 +35,12 @@ class WeightClassification:
     category: str  # "ternary_eligible", "fp16_retain", "skip"
     reason: str  # why this classification was chosen
     component: str  # "language", "vision", "audio", "projector"
+    expert_idx: Optional[int] = None
+    """Integer expert index for MoE expert weights (e.g., 0–7 for
+    Mixtral's 8 experts). ``None`` = not an expert weight."""
+    attention_type: Optional[Literal["full", "linear"]] = None
+    """Attention layer type for hybrid architectures. ``None`` =
+    adapter does not distinguish (default for non-hybrid models)."""
 
 
 @dataclass
@@ -30,7 +48,7 @@ class AdapterInfo:
     """Metadata about an architecture adapter."""
 
     name: str
-    architecture: str  # HF architecture class name
+    architectures: list[str]  # HF architecture class names supported by this adapter
     model_type: str  # HF model_type field
     description: str
     block_pattern: re.Pattern
@@ -38,6 +56,19 @@ class AdapterInfo:
     protection_patterns: list[str]
     multimodal: bool = False
     multimodal_components: list[str] = field(default_factory=list)
+    expert_pattern: Optional[re.Pattern] = None
+    """Regex with named group ``"expert_idx"`` capturing the expert
+    integer for MoE models. ``None`` = non-MoE adapter. When set,
+    the base :meth:`ArchitectureAdapter._extract_expert_idx`
+    helper uses this to populate
+    :attr:`WeightClassification.expert_idx`."""
+    attention_type_pattern: Optional[re.Pattern] = None
+    """Regex matching weight names that belong to linear-attention
+    layers (DeltaNet, Mamba, RWKV) in hybrid architectures.
+    ``None`` = standard attention only. When set, the base
+    :meth:`ArchitectureAdapter._detect_attention_type` helper
+    tags weights with ``attention_type="linear"`` if they match,
+    ``"full"`` otherwise."""
 
 
 class ArchitectureAdapter:
@@ -47,7 +78,16 @@ class ArchitectureAdapter:
     - info() -> AdapterInfo
     - classify_weight(name, shape) -> WeightClassification
     - normalize_name(name) -> str
+
+    Subclasses may override the ``_VISION_PATTERNS`` /
+    ``_AUDIO_PATTERNS`` / ``_PROJECTOR_PATTERNS`` class attributes
+    to drive the default :meth:`_detect_component` behaviour.
+    Empty defaults make text-only adapters trivial.
     """
+
+    _VISION_PATTERNS: list[str] = []
+    _AUDIO_PATTERNS: list[str] = []
+    _PROJECTOR_PATTERNS: list[str] = []
 
     def info(self) -> AdapterInfo:
         """Return adapter metadata."""
@@ -90,3 +130,128 @@ class ArchitectureAdapter:
     def projection_priority(self) -> list[str]:
         """Return projection types ordered by ternary tolerance."""
         return self.info().projection_priority
+
+    def _detect_component(self, name: str) -> str:
+        """Return component bucket for a weight name.
+
+        Default 4-bucket vocab: ``"vision"`` | ``"audio"`` |
+        ``"projector"`` | ``"language"``. Subclasses override the
+        ``_VISION_PATTERNS`` / ``_AUDIO_PATTERNS`` /
+        ``_PROJECTOR_PATTERNS`` class attributes; the method body
+        stays shared.
+
+        Pattern scan priority: vision → audio → projector. If a
+        name matches patterns in multiple buckets, the first
+        match wins. Returns ``"language"`` if no pattern matches
+        (text-only fallback).
+        """
+        for pattern in self._VISION_PATTERNS:
+            if re.search(pattern, name):
+                return "vision"
+        for pattern in self._AUDIO_PATTERNS:
+            if re.search(pattern, name):
+                return "audio"
+        for pattern in self._PROJECTOR_PATTERNS:
+            if re.search(pattern, name):
+                return "projector"
+        return "language"
+
+    def classify_all(
+        self,
+        weight_shapes: dict[str, list[int]],
+    ) -> dict[str, WeightClassification]:
+        """Classify every weight in the dict.
+
+        Concrete default — calls :meth:`classify_weight` on each
+        name paired with its shape. Not expected to be overridden;
+        ``classify_weight`` is the per-weight policy hook.
+        """
+        return {
+            name: self.classify_weight(name, shape)
+            for name, shape in weight_shapes.items()
+        }
+
+    def get_ternary_eligible(
+        self,
+        weight_shapes: dict[str, list[int]],
+    ) -> list[str]:
+        """Return weight names that classify as ``"ternary_eligible"``.
+
+        Concrete default — filters :meth:`classify_all` results by
+        category. Not expected to be overridden.
+        """
+        classifications = self.classify_all(weight_shapes)
+        return [
+            name for name, cls in classifications.items()
+            if cls.category == "ternary_eligible"
+        ]
+
+    def _extract_expert_idx(self, name: str) -> Optional[int]:
+        """Extract MoE expert index from a weight name.
+
+        Uses ``self.info().expert_pattern``. Returns ``None`` if no
+        pattern is declared on this adapter (non-MoE) or if the
+        pattern does not match this name. The pattern must declare
+        a named group ``"expert_idx"`` capturing the integer.
+
+        Concrete default — not expected to be overridden. MoE
+        adapters declare ``expert_pattern`` in ``info()`` and
+        inherit this helper.
+        """
+        pattern = self.info().expert_pattern
+        if pattern is None:
+            return None
+        match = pattern.search(name)
+        if match is None:
+            return None
+        try:
+            return int(match.group("expert_idx"))
+        except (IndexError, ValueError):
+            return None
+
+    def _detect_attention_type(
+        self,
+        name: str,
+    ) -> Optional[Literal["full", "linear"]]:
+        """Detect attention layer type for hybrid architectures.
+
+        Uses ``self.info().attention_type_pattern``. Returns
+        ``None`` if no pattern is declared (adapter does not
+        distinguish), ``"linear"`` if the name matches the
+        linear-attention pattern, ``"full"`` otherwise.
+
+        Concrete default — not expected to be overridden. Hybrid
+        adapters declare ``attention_type_pattern`` in ``info()``
+        and inherit this helper.
+        """
+        pattern = self.info().attention_type_pattern
+        if pattern is None:
+            return None
+        if pattern.search(name):
+            return "linear"
+        return "full"
+
+    def validate_architecture(self, hf_arch: str) -> None:
+        """Verify the HF config architecture is supported.
+
+        Raises :class:`ArchitectureMismatch` if ``hf_arch`` is not
+        in ``self.info().architectures``. Subclasses MAY override
+        to add stricter checks (e.g., a future MoE adapter that
+        also wants to verify ``num_local_experts > 0``).
+
+        Concrete default — checks the declared allow-list.
+        Heuristic family-matching is deliberately not supported;
+        if a model is shape-compatible, the architecture must be
+        declared explicitly in the adapter's
+        :attr:`AdapterInfo.architectures` list.
+        """
+        info = self.info()
+        if hf_arch not in info.architectures:
+            raise ArchitectureMismatch(
+                f"Adapter '{info.name}' does not support "
+                f"architecture '{hf_arch}'. Declared architectures: "
+                f"{info.architectures}. Either route to a different "
+                f"adapter or, if the model is genuinely shape-"
+                f"compatible, add '{hf_arch}' to the adapter's "
+                f"AdapterInfo.architectures list."
+            )
