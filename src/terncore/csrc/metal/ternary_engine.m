@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #include "ternary_engine.h"
 #include <string.h>
+#include <dlfcn.h>
 
 // ---------------------------------------------------------------------------
 // Internal structures
@@ -106,31 +107,41 @@ TernaryEngine* tern_engine_create(void) {
             return NULL;
         }
 
-        // Load Metal source from adjacent .metal file
-        NSString* dir = [[[NSString stringWithUTF8String:__FILE__]
-                          stringByDeletingLastPathComponent]
-                         stringByAppendingPathComponent:@"ternary_matmul.metal"];
-        NSError* error = nil;
-        NSString* source = [NSString stringWithContentsOfFile:dir
-                                                     encoding:NSUTF8StringEncoding
-                                                        error:&error];
-        if (!source) {
-            // Try loading from metallib next to the dylib
-            NSString* libDir = [[[NSProcessInfo processInfo] arguments][0]
-                                stringByDeletingLastPathComponent];
-            NSString* metallib = [libDir stringByAppendingPathComponent:@"ternary_matmul.metallib"];
-            engine->library = [engine->device newLibraryWithFile:metallib error:&error];
+        // Resolve dylib directory via dladdr — anchors lookup to the dylib's
+        // own location regardless of process CWD or invocation path.
+        Dl_info info;
+        if (!dladdr((void*)&tern_engine_create, &info) || !info.dli_fname) {
+            snprintf(engine->last_error, sizeof(engine->last_error),
+                     "Failed to resolve dylib path via dladdr");
+            free(engine);
+            return NULL;
+        }
+        NSString* dylibDir = [[NSString stringWithUTF8String:info.dli_fname]
+                              stringByDeletingLastPathComponent];
 
-            if (!engine->library) {
-                // Try compiling from source embedded at build time
+        // Two candidate locations:
+        //   <dylibDir>/../ternary_matmul.metal     — source-tree pattern (dylib in build/)
+        //   <dylibDir>/ternary_matmul.metallib     — AOT pattern (`make metallib` output)
+        NSString* parentDir    = [dylibDir stringByDeletingLastPathComponent];
+        NSString* sourcePath   = [parentDir stringByAppendingPathComponent:@"ternary_matmul.metal"];
+        NSString* metallibPath = [dylibDir  stringByAppendingPathComponent:@"ternary_matmul.metallib"];
+
+        NSFileManager* fm = [NSFileManager defaultManager];
+        NSError* error = nil;
+
+        if ([fm fileExistsAtPath:sourcePath]) {
+            NSString* source = [NSString stringWithContentsOfFile:sourcePath
+                                                         encoding:NSUTF8StringEncoding
+                                                            error:&error];
+            if (!source) {
                 snprintf(engine->last_error, sizeof(engine->last_error),
-                         "Failed to load Metal source: %s",
-                         error ? [[error localizedDescription] UTF8String] : "file not found");
+                         "Failed to read Metal source at %s: %s",
+                         [sourcePath UTF8String],
+                         error ? [[error localizedDescription] UTF8String] : "unknown");
                 free(engine);
                 return NULL;
             }
-        } else {
-            // Compile from source
+
             MTLCompileOptions* opts = [[MTLCompileOptions alloc] init];
             opts.fastMathEnabled = YES;
             opts.languageVersion = MTLLanguageVersion3_1;
@@ -140,11 +151,28 @@ TernaryEngine* tern_engine_create(void) {
                                                              error:&error];
             if (!engine->library) {
                 snprintf(engine->last_error, sizeof(engine->last_error),
-                         "Metal compilation failed: %s",
-                         [[error localizedDescription] UTF8String]);
+                         "Metal source compilation failed: %s",
+                         error ? [[error localizedDescription] UTF8String] : "unknown");
                 free(engine);
                 return NULL;
             }
+        } else if ([fm fileExistsAtPath:metallibPath]) {
+            engine->library = [engine->device newLibraryWithFile:metallibPath error:&error];
+            if (!engine->library) {
+                snprintf(engine->last_error, sizeof(engine->last_error),
+                         "Failed to load metallib at %s: %s",
+                         [metallibPath UTF8String],
+                         error ? [[error localizedDescription] UTF8String] : "unknown");
+                free(engine);
+                return NULL;
+            }
+        } else {
+            snprintf(engine->last_error, sizeof(engine->last_error),
+                     "Metal library not found. Tried source: %s | metallib: %s",
+                     [sourcePath UTF8String],
+                     [metallibPath UTF8String]);
+            free(engine);
+            return NULL;
         }
 
         // Create compute pipelines with function constants
