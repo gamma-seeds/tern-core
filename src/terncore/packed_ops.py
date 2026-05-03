@@ -103,6 +103,14 @@ def packed_ternary_matmul_fast(
 
             # Use cached bitmap or build on the fly
             if sparsity_bitmap is not None:
+                expected_bytes = (out_features * in_features + 7) // 8
+                if sparsity_bitmap.numel() != expected_bytes:
+                    raise ValueError(
+                        f"sparsity_bitmap shape mismatch: expected {expected_bytes} bytes "
+                        f"(1 bit/weight LSB-first packed), got {sparsity_bitmap.numel()} bytes. "
+                        f"Construct via `np.packbits((ternary != 0).astype(np.uint8), bitorder='little')`. "
+                        f"Pass `sparsity_bitmap=None` to let the function build it on the fly."
+                    )
                 bitmap_np = np.ascontiguousarray(
                     sparsity_bitmap.numpy(), dtype=np.uint8
                 )
