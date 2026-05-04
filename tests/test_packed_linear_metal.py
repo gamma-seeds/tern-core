@@ -104,3 +104,76 @@ def test_repack_cross_kernel_equivalence(M, K):
         f"cross-kernel divergence {max_abs_diff} exceeds tolerance 0.05 "
         f"for M={M} K={K} (alpha={alpha:.4f})"
     )
+
+
+@pytest.mark.parametrize("M,K", [(64, 64), (256, 256), (2560, 2560)])
+def test_packed_layer_mps_matches_cpu(M, K):
+    """PackedTernaryLinear forward on MPS produces output equivalent to
+    forward on CPU. Exercises the new _forward_metal path end-to-end:
+    instance construction → .to("mps") → forward dispatch → output read.
+    Tolerance carries from the cross-kernel calibration (5e-2)."""
+    _metal_or_skip()
+    if not torch.backends.mps.is_available():
+        pytest.skip("MPS unavailable on this host")
+
+    import torch.nn as nn
+    from terncore.packed_linear import PackedTernaryLinear
+
+    torch.manual_seed(700)
+    linear = nn.Linear(K, M, bias=True)
+    packed_cpu = PackedTernaryLinear.from_float(linear, threshold=0.7)
+    packed_cpu.eval()
+    packed_mps = PackedTernaryLinear.from_float(linear, threshold=0.7).to("mps")
+    packed_mps.eval()
+
+    x_cpu = torch.randn(1, K)
+    x_mps = x_cpu.to("mps")
+
+    with torch.no_grad():
+        cpu_out = packed_cpu(x_cpu)
+        mps_out = packed_mps(x_mps)
+
+    assert mps_out.device.type == "mps"
+    mps_out_cpu = mps_out.cpu()
+    max_diff = (cpu_out - mps_out_cpu).abs().max().item()
+    print(f"\n[M={M} K={K}] mps vs cpu max_abs_diff={max_diff:.6f}", flush=True)
+    assert max_diff < 5e-2, (
+        f"MPS-via-Metal vs CPU divergence: {max_diff} (atol=5e-2)"
+    )
+
+
+def test_packed_layer_lazy_buffer_allocation():
+    """_metal_buffers_initialised is False before first MPS forward, True
+    after, and stays True across subsequent forwards. Codes/scales buffers
+    are non-None after init and are not re-allocated on subsequent calls."""
+    _metal_or_skip()
+    if not torch.backends.mps.is_available():
+        pytest.skip("MPS unavailable on this host")
+
+    import torch.nn as nn
+    from terncore.packed_linear import PackedTernaryLinear
+
+    torch.manual_seed(701)
+    linear = nn.Linear(64, 32, bias=False)
+    packed = PackedTernaryLinear.from_float(linear, threshold=0.7).to("mps")
+    packed.eval()
+
+    assert packed._metal_buffers_initialised is False
+    assert packed._metal_codes_buf is None
+    assert packed._metal_scales_buf is None
+
+    x = torch.randn(1, 64).to("mps")
+    with torch.no_grad():
+        _ = packed(x)
+
+    assert packed._metal_buffers_initialised is True
+    assert packed._metal_codes_buf is not None
+    assert packed._metal_scales_buf is not None
+
+    codes_id = id(packed._metal_codes_buf)
+    scales_id = id(packed._metal_scales_buf)
+    with torch.no_grad():
+        _ = packed(x)
+
+    assert id(packed._metal_codes_buf) == codes_id
+    assert id(packed._metal_scales_buf) == scales_id
