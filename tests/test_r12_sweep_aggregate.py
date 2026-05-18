@@ -300,3 +300,70 @@ def test_compression_ratio_in_frontier(tmp_path: Path, b_mse: int, expected_rati
     _write_point(tmp_path, _make_point_json(point_index=0, b_mse=b_mse))
     manifest = _aggregate(tmp_path, [b_mse])
     assert manifest["frontier"][0]["kv_cache_compression_ratio"] == expected_ratio
+
+
+# ── R4 aggregator-glob safety: heartbeat sidecars are ignored ──────────────
+
+
+def test_heartbeat_sidecar_ignored_by_aggregator(tmp_path: Path) -> None:
+    """WS-001 R4: heartbeat sidecars (.jsonl) coexist in sweep dir without
+    being picked up by the aggregator's point_*.json glob.
+
+    Failure mode this guards: if a future change loosens the aggregator's
+    glob (e.g. to `point_*.json*` or similar), a heartbeat sidecar would
+    parse as a per-point JSON, corrupting the manifest or raising on
+    json.loads of a JSONL multi-object file.
+    """
+    grid = [6, 5]
+    for idx, b in enumerate(grid):
+        _write_point(tmp_path, _make_point_json(point_index=idx, b_mse=b))
+
+    # Drop heartbeat sidecars with the canonical filename for each point.
+    # JSONL content (multiple JSON objects, one per line) would raise on
+    # json.loads() — if the aggregator accidentally consumes one, the test
+    # surfaces it as an exception during _aggregate().
+    for idx, b in enumerate(grid):
+        sidecar = tmp_path / f"point_{idx:02d}_b_mse_{b}_heartbeat.jsonl"
+        sidecar.write_text(
+            '{"phase": "eval_start", "n_sequences": 4}\n'
+            '{"phase": "seq_start", "seq": 0, "L_eff": 2049}\n'
+            '{"phase": "seq_end", "seq": 0, "alloc_MB_pre_drain": 120.5}\n'
+        )
+
+    manifest = _aggregate(tmp_path, grid)
+
+    # Aggregator must NOT include heartbeat-sidecar entries in the manifest
+    point_filenames = {pt["filename"] for pt in manifest["points"]}
+    for fn in point_filenames:
+        assert fn.endswith(".json"), (
+            f"heartbeat sidecar leaked into manifest.points: {fn}"
+        )
+        assert "heartbeat" not in fn, (
+            f"heartbeat sidecar leaked into manifest.points: {fn}"
+        )
+    assert len(manifest["points"]) == 2
+    assert manifest["termination"]["terminated_reason"] == "grid_exhausted"
+
+
+def test_heartbeat_sidecar_with_json_extension_would_break(tmp_path: Path) -> None:
+    """Negative-case complement to R4: documents WHY .jsonl extension is
+    load-bearing. If someone misnames a heartbeat file `*_heartbeat.json`
+    (note: no L), the regex ``^point_(\\d+)_b_mse_(\\d+)_.*\\.json$`` would
+    match it, and ``json.loads`` on the multi-line JSONL content would raise.
+
+    This test pins .jsonl extension as the canonical convention by
+    surfacing the failure that would occur if .json were used instead.
+    """
+    grid = [6]
+    _write_point(tmp_path, _make_point_json(point_index=0, b_mse=6))
+
+    bad_sidecar = tmp_path / "point_00_b_mse_6_heartbeat.json"
+    bad_sidecar.write_text(
+        '{"phase": "eval_start"}\n{"phase": "seq_start"}\n'
+    )
+
+    with pytest.raises(Exception):
+        # json.loads on the JSONL content raises; aggregator does not
+        # guard against the misnaming because the canonical extension
+        # convention IS the load-bearing safety.
+        _aggregate(tmp_path, grid)
