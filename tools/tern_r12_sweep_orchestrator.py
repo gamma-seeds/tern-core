@@ -69,7 +69,7 @@ def _build_point_argv(
     output_subdir: str,
 ) -> list[str]:
     """Build the argv for one per-point subprocess invocation."""
-    return [
+    argv = [
         python, str(SWEEP_SCRIPT),
         "--model-id", args.model_id,
         "--baseline-run-id", args.baseline_run_id,
@@ -88,6 +88,11 @@ def _build_point_argv(
         "--point-index-offset", str(point_index),
         "--skip-manifest",
     ]
+    # WS-001 eval-loop instrumentation (additive 2026-05-18)
+    if getattr(args, "enable_heartbeat", False):
+        argv += ["--enable-heartbeat",
+                 "--heartbeat-token-interval", str(args.heartbeat_token_interval)]
+    return argv
 
 
 def _read_point_json(sweep_dir: Path, point_index: int, b_mse: int) -> Optional[dict]:
@@ -315,6 +320,17 @@ def main() -> None:
                    help="Reduced-param smoke mode: b_mse=[4,2], N=2, L=128")
     p.add_argument("--python", default=None,
                    help="Python interpreter for subprocesses (default: sys.executable)")
+    # WS-001 eval-loop instrumentation (additive 2026-05-18)
+    p.add_argument("--enable-heartbeat", action="store_true",
+                   help="Per-point JSONL heartbeat sidecar (fsync per line; "
+                        "survives SIGTRAP). Filename: "
+                        "point_NN_b_mse_B_heartbeat.jsonl (excluded from "
+                        "aggregator glob via .jsonl extension). Each "
+                        "heartbeat carries cumulative total_loss + "
+                        "total_scored so partial PPL is reconstructible "
+                        "from the last fsync'd line.")
+    p.add_argument("--heartbeat-token-interval", type=int, default=128,
+                   help="Heartbeat every K inner-loop tokens (default 128)")
 
     args = p.parse_args()
 
