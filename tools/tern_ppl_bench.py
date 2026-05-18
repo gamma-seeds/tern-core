@@ -29,13 +29,14 @@ import datetime as _dt
 import hashlib
 import json
 import math
+import os
 import subprocess
 import sys
 import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TextIO
 
 import torch
 
@@ -276,11 +277,59 @@ class ARPplResult:
     per_sequence_losses: list[float]
 
 
+def _mps_alloc_mb(device: str) -> Optional[float]:
+    """Return PyTorch MPS allocator's current allocated memory in MB.
+
+    Returns None when device != "mps".
+
+    Uses ``torch.mps.current_allocated_memory()`` (PyTorch allocator's view of
+    currently-in-use bytes) rather than ``driver_allocated_memory()``. The
+    latter was observed reporting virtual-address-space commits (>76 GB on
+    64 GB unified-memory M4 Pro) — useful for OOM diagnostics but misleading
+    as an allocator-pressure proxy. R1 instrumentation surfaced this empirically
+    on 2026-05-18; documented in the WS-001 PR description.
+
+    Numerical-neutrality: counter read with no kernel launch, no dispatch_sync,
+    no MPS->CPU sync side-effect. Safe to call inside the inner loop at
+    per-heartbeat cadence without changing eval semantics.
+    """
+    if device != "mps":
+        return None
+    try:
+        return torch.mps.current_allocated_memory() / (1024 * 1024)
+    except Exception:
+        return None
+
+
+def _emit_heartbeat(
+    *,
+    sidecar: Optional[TextIO],
+    payload: dict,
+    stdout_prefix: str = "[r7b_ar_eval]",
+    stdout_message: str = "",
+) -> None:
+    """Write one heartbeat line to JSONL sidecar (with fsync) + stdout.
+
+    fsync on the sidecar fd guarantees durability across SIGTRAP — the
+    application log may lose the last buffered seconds, but every fsync'd
+    heartbeat line survives.
+    """
+    if sidecar is not None:
+        sidecar.write(json.dumps(payload) + "\n")
+        sidecar.flush()
+        os.fsync(sidecar.fileno())
+    if stdout_message:
+        print(f"{stdout_prefix} {stdout_message}", flush=True)
+
+
 def evaluate_ppl_autoregressive(
     model: Any,
     sequences: list[list[int]],
     kv_cache_hook: Optional[Any] = None,
     device: str = "mps",
+    *,
+    heartbeat_sidecar_path: Optional[Path] = None,
+    heartbeat_token_interval: int = 128,
 ) -> ARPplResult:
     """R7-B v1.1 §5 canonical autoregressive PPL.
 
@@ -297,6 +346,18 @@ def evaluate_ppl_autoregressive(
                         forward calls. Closure lifetime is the caller's
                         concern (one factory per measurement per §5.4).
         device:         Device string for tensor placement.
+
+    Optional progress instrumentation (WS-001, 2026-05-18):
+
+        heartbeat_sidecar_path:
+            If provided, JSONL heartbeat lines are written here with fsync,
+            surviving SIGTRAP. Same lines also go to stdout for live view.
+            Each heartbeat carries cumulative ``total_loss`` + ``total_scored``
+            so the last fsync'd line enables ``ppl_partial = exp(total_loss/
+            total_scored)`` reconstruction if the process traps mid-eval.
+        heartbeat_token_interval:
+            Emit a heartbeat every K inner-loop iterations (default 128).
+            Per-sequence boundary lines (seq_start / seq_end) emit regardless.
     """
     import torch.nn.functional as F
 
@@ -309,39 +370,136 @@ def evaluate_ppl_autoregressive(
     total_scored: int = 0
     per_sequence_losses: list[float] = []
 
-    t_start = time.perf_counter()
-    with torch.no_grad():
-        for seq in sequences:
-            past_kv = None
-            seq_loss: float = 0.0
-            L_eff = len(seq)
-            for t in range(L_eff - 1):
-                input_ids = torch.tensor([[seq[t]]], device=device)
-                outputs = model(
-                    input_ids=input_ids,
-                    past_key_values=past_kv,
-                    use_cache=True,
-                )
-                past_kv = outputs.past_key_values
-                # Per R7-B v1.1 §5.2: kv_cache_hook returns DynamicCache
-                # directly. The legacy-tuple wrapping bridge from PR #30 is
-                # removed; the hook factories (PR #26, PR #27) now produce
-                # Cache-shaped objects natively.
-                past_kv = kv_cache_hook(past_kv)
+    sidecar: Optional[TextIO] = None
+    if heartbeat_sidecar_path is not None:
+        heartbeat_sidecar_path.parent.mkdir(parents=True, exist_ok=True)
+        sidecar = open(heartbeat_sidecar_path, "a", buffering=1)
 
-                logits = outputs.logits[0, -1]
-                target = torch.tensor(seq[t + 1], device=device)
-                # reduction='sum' on a single-position pair gives the
-                # per-token CE; .item() casts to Python float (float64).
-                loss = F.cross_entropy(
-                    logits.unsqueeze(0),
-                    target.unsqueeze(0),
-                    reduction="sum",
-                ).item()
-                seq_loss += loss
-                total_loss += loss
-                total_scored += 1
-            per_sequence_losses.append(seq_loss)
+    t_start = time.perf_counter()
+    _emit_heartbeat(
+        sidecar=sidecar,
+        payload={
+            "t_iso": utc_now_iso(), "wall_s": 0.0, "phase": "eval_start",
+            "n_sequences": len(sequences),
+            "alloc_MB": _mps_alloc_mb(device),
+            "heartbeat_token_interval": heartbeat_token_interval,
+        },
+        stdout_message=(
+            f"eval_start n_sequences={len(sequences)} "
+            f"alloc_MB={_mps_alloc_mb(device)} "
+            f"hb_K={heartbeat_token_interval}"
+        ),
+    )
+
+    try:
+        with torch.no_grad():
+            for seq_idx, seq in enumerate(sequences):
+                past_kv = None
+                seq_loss: float = 0.0
+                L_eff = len(seq)
+                seq_t0 = time.perf_counter()
+                _emit_heartbeat(
+                    sidecar=sidecar,
+                    payload={
+                        "t_iso": utc_now_iso(),
+                        "wall_s": round(time.perf_counter() - t_start, 3),
+                        "seq": seq_idx, "phase": "seq_start", "L_eff": L_eff,
+                        "alloc_MB": _mps_alloc_mb(device),
+                    },
+                    stdout_message=(
+                        f"seq={seq_idx}/{len(sequences)} start L_eff={L_eff} "
+                        f"alloc_MB={_mps_alloc_mb(device)}"
+                    ),
+                )
+
+                for t in range(L_eff - 1):
+                    input_ids = torch.tensor([[seq[t]]], device=device)
+                    outputs = model(
+                        input_ids=input_ids,
+                        past_key_values=past_kv,
+                        use_cache=True,
+                    )
+                    past_kv = outputs.past_key_values
+                    # Per R7-B v1.1 §5.2: kv_cache_hook returns DynamicCache
+                    # directly. The legacy-tuple wrapping bridge from PR #30
+                    # is removed; the hook factories (PR #26, PR #27) now
+                    # produce Cache-shaped objects natively.
+                    past_kv = kv_cache_hook(past_kv)
+
+                    logits = outputs.logits[0, -1]
+                    target = torch.tensor(seq[t + 1], device=device)
+                    # reduction='sum' on a single-position pair gives the
+                    # per-token CE; .item() casts to Python float (float64).
+                    loss = F.cross_entropy(
+                        logits.unsqueeze(0),
+                        target.unsqueeze(0),
+                        reduction="sum",
+                    ).item()
+                    seq_loss += loss
+                    total_loss += loss
+                    total_scored += 1
+
+                    if heartbeat_token_interval > 0 and (
+                        t > 0 and t % heartbeat_token_interval == 0
+                    ):
+                        ppl_partial = (
+                            math.exp(total_loss / total_scored)
+                            if total_scored > 0 else None
+                        )
+                        _emit_heartbeat(
+                            sidecar=sidecar,
+                            payload={
+                                "t_iso": utc_now_iso(),
+                                "wall_s": round(
+                                    time.perf_counter() - t_start, 3
+                                ),
+                                "seq": seq_idx, "phase": "hb",
+                                "token": t, "L_eff": L_eff,
+                                "alloc_MB": _mps_alloc_mb(device),
+                                "total_loss": total_loss,
+                                "total_scored": total_scored,
+                                "ppl_partial": ppl_partial,
+                            },
+                            stdout_message=(
+                                f"seq={seq_idx}/{len(sequences)} hb t={t}/"
+                                f"{L_eff} alloc_MB={_mps_alloc_mb(device)} "
+                                f"ppl_partial={ppl_partial}"
+                            ),
+                        )
+
+                per_sequence_losses.append(seq_loss)
+                seq_wall = time.perf_counter() - seq_t0
+                ppl_partial = (
+                    math.exp(total_loss / total_scored)
+                    if total_scored > 0 else None
+                )
+                _emit_heartbeat(
+                    sidecar=sidecar,
+                    payload={
+                        "t_iso": utc_now_iso(),
+                        "wall_s": round(time.perf_counter() - t_start, 3),
+                        "seq": seq_idx, "phase": "seq_end", "L_eff": L_eff,
+                        "seq_wall_s": round(seq_wall, 3),
+                        "seq_loss": seq_loss,
+                        "total_loss": total_loss,
+                        "total_scored": total_scored,
+                        "ppl_partial": ppl_partial,
+                        "alloc_MB": _mps_alloc_mb(device),
+                    },
+                    stdout_message=(
+                        f"seq={seq_idx}/{len(sequences)} done wall={seq_wall:.1f}s "
+                        f"loss={seq_loss:.4f} ppl_partial={ppl_partial} "
+                        f"alloc_MB={_mps_alloc_mb(device)}"
+                    ),
+                )
+    finally:
+        if sidecar is not None:
+            sidecar.flush()
+            try:
+                os.fsync(sidecar.fileno())
+            except Exception:
+                pass
+            sidecar.close()
 
     eval_wall_time = time.perf_counter() - t_start
 
