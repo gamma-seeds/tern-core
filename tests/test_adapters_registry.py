@@ -32,14 +32,18 @@ def test_get_adapter_raises_on_unknown_name_case_insensitive():
         get_adapter("LLAMA_FAKE")
 
 
-@pytest.mark.parametrize("name", ["llama", "gemma3", "gemma4", "phi3", "qwen3_moe"])
+@pytest.mark.parametrize(
+    "name", ["llama", "gemma3", "gemma4", "phi3", "qwen3_moe", "kokoro"]
+)
 def test_get_adapter_returns_instance_for_each_known_name(name):
     adapter = get_adapter(name)
     assert isinstance(adapter, ArchitectureAdapter)
     assert adapter.info().name == name
 
 
-@pytest.mark.parametrize("name", ["LLAMA", "Gemma3", "GEMMA4", "PHI3", "Qwen3_MoE"])
+@pytest.mark.parametrize(
+    "name", ["LLAMA", "Gemma3", "GEMMA4", "PHI3", "Qwen3_MoE", "KOKORO"]
+)
 def test_get_adapter_accepts_mixed_case_known_names(name):
     adapter = get_adapter(name)
     assert isinstance(adapter, ArchitectureAdapter)
@@ -47,4 +51,10 @@ def test_get_adapter_accepts_mixed_case_known_names(name):
 
 
 def test_known_adapters_is_canonical_source():
-    assert set(_KNOWN_ADAPTERS) == {"llama", "gemma3", "gemma4", "phi3", "qwen3_moe"}
+    # Kokoro 82M adapter added 2026-05-19 as first downstream consumer
+    # integration of integration³ Provider³ Protocol (Phase 0 brief
+    # ``2026-05-19_kokoro_82m_integration3_attachment_phase0.md``;
+    # OQ-1 Option A sibling-cohort placement).
+    assert set(_KNOWN_ADAPTERS) == {
+        "llama", "gemma3", "gemma4", "phi3", "qwen3_moe", "kokoro",
+    }
