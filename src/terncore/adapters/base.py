@@ -101,6 +101,26 @@ class AdapterInfo:
     :meth:`ArchitectureAdapter._detect_attention_type` helper
     tags weights with ``attention_type="linear"`` if they match,
     ``"full"`` otherwise."""
+    vocoder_pattern: Optional[re.Pattern] = None
+    """Regex matching weight names that belong to a neural vocoder
+    sub-stack (e.g. ISTFTNet decoder convolutions for TTS adapters).
+    ``None`` = adapter has no vocoder sub-stack (default for LLM
+    cohort). When set, the adapter's :meth:`classify_weight` routes
+    matching weights via the vocoder layer-sensitivity policy
+    (e.g. ResBlock dilated convs ternary; upsample / output layers
+    INT4) per the v0.6.0+ mixed ternary/INT4 layer-sensitivity
+    routing discipline. Additive Optional field — non-TTS adapters
+    leave at default ``None`` per Kokoro 82M attachment 2026-05-19."""
+    acoustic_stack_pattern: Optional[re.Pattern] = None
+    """Regex matching weight names that belong to a TTS acoustic
+    sub-stack (e.g. StyleTTS 2 plbert text encoder + duration
+    predictor + style projector for Kokoro 82M). ``None`` = adapter
+    has no acoustic sub-stack (default for LLM cohort). When set,
+    the adapter's :meth:`classify_weight` may apply acoustic-stack-
+    aware routing policy (typically ternary-eligible 2-D FC weights
+    with sensitive embeddings / norms protected). Additive Optional
+    field — non-TTS adapters leave at default ``None`` per Kokoro
+    82M attachment 2026-05-19."""
 
 
 class ArchitectureAdapter:

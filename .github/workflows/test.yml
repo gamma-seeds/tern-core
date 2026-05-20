@@ -21,6 +21,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev,transformers]"
+      - name: Checkout integration3 (canonical pin)
+        uses: actions/checkout@v4
+        with:
+          repository: gamma-seeds/integration3
+          ref: v1.0.3
+          token: ${{ secrets.INTEGRATION3_READONLY_TOKEN }}
+          path: integration3
+      - name: Install integration3
+        run: pip install ./integration3
       - name: Build C kernels
         run: |
           cd src/terncore/csrc
