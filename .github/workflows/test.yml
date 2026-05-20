@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gamma-seeds/integration3
-          ref: v1.0.2
+          ref: v1.0.3
           token: ${{ secrets.INTEGRATION3_READONLY_TOKEN }}
           path: integration3
       - name: Install integration3
