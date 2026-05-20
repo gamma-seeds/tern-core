@@ -23,14 +23,6 @@ scheme; one canonical identity across integration³).
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Resolve the integration³ canonical package (agents/integration3/ checkout).
-_AGENTS_PATH = Path("/Users/syn/synapticode/agents/integration3")
-if _AGENTS_PATH.exists() and str(_AGENTS_PATH) not in sys.path:
-    sys.path.insert(0, str(_AGENTS_PATH))
-
 from integration3 import (
     Confidence3,
     LedgerEntry3,
