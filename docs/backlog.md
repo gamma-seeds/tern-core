@@ -121,8 +121,29 @@ Original criterion ("All 5 manifests load") was written without M4 Pro 64 GB fac
 
 ### load_packed_model: MoE per-expert restacking for stacked-tensor architectures
 
-**Status:** Open (medium priority, natural integration with L5 sprint planned for week of 2026-05-12)
+**Status:** Partially resolved 2026-05-28 — Milestone 1 Stage 1 (Qwen3-30B-A3B via expert bank). Gemma-4 stacked-tensor case + the dense-into-HF-model path remain open.
 **Surfaced:** 2026-05-08 by gemma4-26b-a4b production manifest integration retest during PR #18 verification
+
+**Stage-1 resolution (2026-05-28, branch `feat/moe-expert-bank-loader-2026-05-28`):**
+The Milestone-1 architecture took Direction B — keep experts ternary-resident
+rather than restack them dense into the transformers fused-experts Parameter.
+`terncore.moe.load_moe_packed` routes per-expert entries into a
+`PackedTernaryExpertBank` addressable by `(layer, expert, proj)`; attention
+loads as `PackedTernaryLinear`; norms/router/embeddings/LM head load as
+protected dense tensors. Verified on the real Qwen3-30B-A3B artefact:
+18,867/18,867 entries routed (18,432 expert + 192 attention + 243 protected),
+exact reconstruction fidelity, **peak RSS 13.27 GB** (vs ~57 GB for the dense
+HF-mutation path that made the Qwen3 integration test skip). `load_packed_model`
+now raises a loud, actionable `ValueError` on per-expert MoE manifests directing
+callers to `load_moe_packed`.
+
+**Still open:** (a) Gemma-4-26B-A4B uses 3-D stacked manifest slices (`stacked_parent`
+metadata) + fuses gate+up differently — a second routing path in `load_moe_packed`;
+(b) the dense-restack-into-stock-HF-model variant (only relevant on 128+ GB hardware
+or for non-streaming use). The Stage 3 custom MoE block (router → bank dispatch) is
+the consumer that turns the bank into a runnable model.
+
+**Original framing (retained):**
 
 **Observation:** PR #14's per-expert slicing rework produces compressed manifests with 128 separate `experts.N.{gate,up,down}_proj.weight` entries per layer (Gemma 4 family) for per-expert sparsity measurement granularity. PR #18's `load_packed_model` rewrite handles per-entry dispatch (one entry → one module replacement or parameter assignment). The intersection — loading per-expert-sliced MoE manifests back into HF MoE models that expose experts as stacked-tensor Parameters (e.g., `model.language_model.layers.0.experts.gate_up_proj` with first dim = 128) rather than ModuleList of individual expert modules — was never empirically tested before 2026-05-08's gemma4-26b-a4b retest.
 

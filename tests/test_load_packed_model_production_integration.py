@@ -105,21 +105,16 @@ IN_SCOPE_MANIFESTS = [
         id="gemma4-26b-a4b",
         marks=pytest.mark.xfail(
             reason=(
-                "Per-expert-sliced MoE manifests require restacking logic "
-                "in load_packed_model that's not yet implemented. PR #14's "
-                "per-expert slicing produces 128 separate experts.N.weight "
-                "entries per layer (for measurement granularity); HF "
-                "Gemma-4-26B-A4B-it exposes experts as stacked tensors "
-                "(experts.gate_up_proj, experts.down_proj with first dim = 128). "
-                "load_packed_model walks per-entry expecting separate modules; "
-                "_resolve_module_or_raise correctly raises ValueError on the "
-                "first 'experts.0' lookup since experts is a stacked-tensor "
-                "Parameter, not a ModuleList. Banked as backlog item: "
-                "'load_packed_model: MoE per-expert restacking for "
-                "stacked-tensor architectures' (cf. docs/backlog.md). "
-                "Scheduled for next-week L5 sprint where MoE expert paging "
-                "is the primary engineering scope; restacking is a natural "
-                "prerequisite for the demand-paging work."
+                "MoE manifests do not load via load_packed_model (submodule "
+                "replacement) because transformers 5.5+ exposes experts as "
+                "fused stacked Parameters with no per-expert submodule. As of "
+                "2026-05-28 load_packed_model raises a loud ValueError on "
+                "per-expert manifests directing to terncore.moe.load_moe_packed, "
+                "which keeps experts ternary-resident in a PackedTernaryExpertBank "
+                "(Milestone 1 Stage 1, verified on Qwen3-30B-A3B). The Gemma-4 "
+                "stacked-tensor routing path within load_moe_packed is still open "
+                "(cf. docs/backlog.md 'load_packed_model: MoE per-expert "
+                "restacking'); this dense-into-HF-model path stays xfail."
             ),
             strict=True,
         ),

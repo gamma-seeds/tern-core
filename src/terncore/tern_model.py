@@ -20,6 +20,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import re
 import struct
 import time
 import zlib
@@ -86,6 +87,11 @@ _PRODUCTION_NAME_SUFFIXES = (
     ".std_bias", ".std_scale",
     ".position_embedding_table",
 )
+
+# Per-expert manifest entry marker (e.g. ``...mlp.experts.7.gate_proj.weight``).
+# Used by load_packed_model to detect MoE manifests it cannot load via
+# submodule replacement and redirect to terncore.moe.load_moe_packed.
+_EXPERT_ENTRY_RE = re.compile(r"\.experts\.\d+\.")
 
 
 def _resolve_param_path(name: str) -> Tuple[str, Optional[str]]:
@@ -1050,6 +1056,56 @@ class TernModelReader:
                 return entry
         raise KeyError(f"Layer {layer_name!r} not found in manifest")
 
+    def build_packed_linear(self, name: str) -> "nn.Module":
+        """Build a ``PackedTernaryLinear`` for a single ``ternary2`` entry.
+
+        Fast path — no re-quantisation; the packed 2-bit bytes from file
+        are used directly. Byte layout matches ``load_packed_model``'s
+        ternary branch: alpha (f32) → packed_size (u32) + packed bytes →
+        bitmap_size (u32) + bitmap → bias_size (u32) + bias.
+
+        Shared by the MoE expert-bank loader
+        (``terncore.moe.load_moe_packed``), which keeps per-expert weights
+        ternary-resident as addressable modules rather than materialising
+        them dense into a transformers fused-experts Parameter.
+
+        Raises ``ValueError`` if the entry is not ``ternary2``.
+        """
+        from terncore.packed_linear import PackedTernaryLinear
+
+        entry = self._get_manifest_entry(name)
+        if entry["dtype"] != "ternary2":
+            raise ValueError(
+                f"build_packed_linear requires a 'ternary2' entry; "
+                f"{name!r} is {entry['dtype']!r}."
+            )
+        buf = io.BytesIO(self.read_layer_data(name))
+        alpha = struct.unpack("<f", buf.read(4))[0]
+        packed_size = struct.unpack("<I", buf.read(4))[0]
+        packed_tensor = torch.frombuffer(
+            bytearray(buf.read(packed_size)), dtype=torch.uint8
+        ).clone()
+        bitmap_size = struct.unpack("<I", buf.read(4))[0]
+        bitmap_tensor = None
+        if bitmap_size > 0:
+            bitmap_tensor = torch.frombuffer(
+                bytearray(buf.read(bitmap_size)), dtype=torch.uint8
+            ).clone()
+        bias_size = struct.unpack("<I", buf.read(4))[0]
+        bias = None
+        if bias_size > 0:
+            bias = torch.frombuffer(
+                bytearray(buf.read(bias_size)), dtype=torch.float32
+            ).clone()
+        return PackedTernaryLinear.from_packed_data(
+            packed_weights=packed_tensor,
+            alpha=alpha,
+            in_features=entry["shape"][1],
+            out_features=entry["shape"][0],
+            bias=bias,
+            sparsity_bitmap=bitmap_tensor,
+        )
+
     # ── Reconstruction methods ──────────────────────────────────
 
     def reconstruct_layer(self, name: str) -> dict[str, torch.Tensor]:
@@ -1423,6 +1479,27 @@ class TernModelReader:
         loaded_keys: list[str] = []
         model_keys = set(dict(model.named_parameters()).keys())
         model_keys.update(dict(model.named_buffers()).keys())
+
+        # MoE per-expert manifest guard. Per-expert-sliced manifests
+        # (entries matching ``.experts.N.``, e.g. Qwen3-30B-A3B,
+        # Gemma-4-26B-A4B) cannot load via submodule replacement:
+        # transformers 5.5+ exposes MoE experts as fused stacked
+        # Parameters (``Qwen3MoeExperts.gate_up_proj`` /  ``down_proj``
+        # with first dim = num_experts), which have no per-expert
+        # submodule to replace. Loud, actionable failure pointing at the
+        # bank loader rather than the cryptic ``has no attribute '0'``
+        # AttributeError on the first ``experts.0`` lookup.
+        if any(_EXPERT_ENTRY_RE.search(e["name"]) for e in self.manifest["layers"]):
+            raise ValueError(
+                "Per-expert-sliced MoE manifest detected (entries match "
+                "'.experts.N.'). load_packed_model performs submodule "
+                "replacement, but transformers 5.5+ exposes MoE experts as "
+                "fused stacked Parameters with no per-expert submodule. Use "
+                "terncore.moe.load_moe_packed(reader, ...) — it builds a "
+                "PackedTernaryExpertBank keeping experts ternary-resident. "
+                "See docs/backlog.md 'load_packed_model: MoE per-expert "
+                "restacking for stacked-tensor architectures'."
+            )
 
         # Per-call counter for INT4 entries — drives the operator-visible
         # log message (one-shot per load_packed_model invocation, not a
