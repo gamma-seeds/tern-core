@@ -140,8 +140,24 @@ callers to `load_moe_packed`.
 **Still open:** (a) Gemma-4-26B-A4B uses 3-D stacked manifest slices (`stacked_parent`
 metadata) + fuses gate+up differently — a second routing path in `load_moe_packed`;
 (b) the dense-restack-into-stock-HF-model variant (only relevant on 128+ GB hardware
-or for non-streaming use). The Stage 3 custom MoE block (router → bank dispatch) is
-the consumer that turns the bank into a runnable model.
+or for non-streaming use).
+
+**Stage 2+3 + capstone (2026-05-28, branch `feat/moe-custom-block-stage23-2026-05-28`):**
+`terncore.moe.TernaryMoEBlock` (drop-in `Qwen3MoeSparseMoeBlock` replacement) and
+`build_runnable_qwen3_moe` (meta-skeleton assembler) turn the bank into a runnable
+model: router `mlp.gate.weight` → softmax/top-8 indexing vector (P145) → `bank.get`
+(P146 prepare) → ternary packed matmul (P146 launch) → gate-weighted combine.
+Verified logit-for-logit equivalent to a dense-ternary reference on a tiny stock
+Qwen3-MoE (router/dispatch/FFN/assembly correct). Capstone on the real
+Qwen3-30B-A3B: assembles with zero stranded-meta tensors, runs end-to-end, peak
+RSS ~16 GB. **Generation is incoherent (repetition collapse) — a quality-envelope
+property of ternary @ threshold 0.7, NOT a load/inference defect.** Disambiguated
+against the cached FP16 checkpoint: placement exact (router/protected cos=1.0),
+per-weight ternary fidelity cos≈0.80-0.89 on experts/attention, compounding across
+48 layers + 8-of-128 routing. Same finding class as the Phi-4 ternary @0.7 collapse
+(see "Phi-4 ternary recompression at lower threshold" item). **Remedy: recompress
+Qwen3-30B-A3B at a lower threshold** (0.5-0.6) — a compression-quality workstream
+separate from the now-working M1 inference path.
 
 **Original framing (retained):**
 
