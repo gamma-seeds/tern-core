@@ -18,6 +18,7 @@ from terncore.moe.expert_bank import (
     PackedTernaryExpertBank,
     load_moe_packed,
 )
+from terncore.moe.lifecycle import ConfidenceState, ExpertLifecycle
 from terncore.moe.runnable import TernaryMoEBlock, build_runnable_qwen3_moe
 
 __all__ = [
@@ -26,4 +27,6 @@ __all__ = [
     "load_moe_packed",
     "TernaryMoEBlock",
     "build_runnable_qwen3_moe",
+    "ConfidenceState",
+    "ExpertLifecycle",
 ]
