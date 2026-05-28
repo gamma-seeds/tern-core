@@ -511,6 +511,44 @@ def _read_hf_arch_from_config(model_dir: Path) -> str:
 # ── Full adapter-aware conversion (mixed ternary/INT4/FP16) ────────
 
 
+def _load_sensitivity_map(
+    explicit_path: Optional[Path],
+    legacy_path: Path,
+    log,
+) -> tuple[dict[str, float], Optional[Path]]:
+    """Load a per-layer reconstruction-error map for INT4 routing.
+
+    Source priority:
+        1. ``explicit_path`` (if provided) — model-specific sensitivity data,
+           e.g. ``benchmarks/sensitivity_scan_<slug>_*.json``.
+        2. Legacy fallback ``benchmarks/gemma4_e4b_dryrun.json`` — historical
+           Gemma-4-E4B dry-run; produces zero matches for any non-Gemma
+           architecture (the dormant-scan failure mode surfaced 2026-05-28).
+
+    Accepts either the sensitivity-scan schema (top-level
+    ``layers: [{name, relative_error, ...}, ...]``) or the legacy dryrun
+    schema (``tolerance_scan: [{name, relative_error}, ...]``).
+
+    Returns ``(map, path_actually_loaded)``; ``path_actually_loaded`` is
+    ``None`` when nothing was loaded.
+    """
+    src = explicit_path or legacy_path
+    if not Path(src).exists():
+        log(f"  Sensitivity map: none at {src}; INT4 routing inactive.")
+        return {}, None
+    with open(src) as f:
+        data = json.load(f)
+    entries = data.get("layers") or data.get("tolerance_scan") or []
+    smap: dict[str, float] = {}
+    for entry in entries:
+        nm = entry.get("name")
+        re_ = entry.get("relative_error")
+        if nm is not None and re_ is not None:
+            smap[nm] = float(re_)
+    log(f"  Sensitivity map: {len(smap)} entries from {Path(src).name}")
+    return smap, Path(src)
+
+
 def full_convert(
     model_id: str,
     adapter_name: str,
@@ -518,6 +556,7 @@ def full_convert(
     threshold: float = 0.7,
     name: str = "model",
     verbose: bool = True,
+    sensitivity_map_path: Optional[str] = None,
 ) -> dict:
     """Full adapter-aware conversion: safetensors → .tern-model.
 
@@ -668,16 +707,27 @@ def full_convert(
     INT4_ERROR_THRESHOLD = 0.54
     int4_candidates = []
 
-    # Try to load dry-run tolerance data for informed split
-    dry_run_path = Path(__file__).parent.parent.parent / "benchmarks" / "gemma4_e4b_dryrun.json"
-    sensitivity_map: dict[str, float] = {}
-    if dry_run_path.exists():
-        import json as _jmod
-        with open(dry_run_path) as _f:
-            dr = _jmod.load(_f)
-        for entry in dr.get("tolerance_scan", []):
-            sensitivity_map[entry["name"]] = entry["relative_error"]
-        _log(f"  Loaded tolerance data for {len(sensitivity_map)} layers")
+    # Load sensitivity map for INT4 routing. Source priority: explicit
+    # caller-supplied path > legacy gemma4_e4b_dryrun.json fallback. The
+    # legacy fallback covers Gemma-4-family names only; any non-Gemma
+    # architecture (Qwen3-MoE, etc.) needs an explicit model-specific
+    # path or it routes 0 layers to INT4 silently. See the 2026-05-28
+    # dormant-scan finding in docs/backlog.md.
+    legacy_path = Path(__file__).parent.parent.parent / "benchmarks" / "gemma4_e4b_dryrun.json"
+    explicit_path = Path(sensitivity_map_path) if sensitivity_map_path else None
+    sensitivity_map, loaded_src = _load_sensitivity_map(
+        explicit_path, legacy_path, _log,
+    )
+    if sensitivity_map:
+        matched = sum(1 for n in eligible if n in sensitivity_map)
+        pct = (matched / len(eligible) * 100.0) if eligible else 0.0
+        _log(f"  Sensitivity matches: {matched}/{len(eligible)} eligible "
+             f"layers ({pct:.1f}%) covered by map")
+        if matched == 0 and explicit_path is None:
+            _log("  WARN: legacy sensitivity map covered 0 layers — likely "
+                 "cross-architecture name mismatch. Supply sensitivity_map_path "
+                 "to enable INT4 routing for this model (cf. docs/backlog.md "
+                 "dormant-scan finding 2026-05-28).")
 
     if sensitivity_map:
         # Split eligible: high-error → INT4, low-error → ternary

@@ -8,6 +8,29 @@ fix scope. Closed items move to a "Closed" section at the bottom.
 
 ## Open
 
+### Compression-quality cliff for ternary @0.7 on MoE — central question 2026-05-28
+
+**Surfaced:** 2026-05-28 by the threshold sweep + sensitivity-scan investigation that followed the Milestone-1 capstone on Qwen3-30B-A3B.
+
+**Verified findings:**
+
+1. **Threshold sweep (0.5 / 0.55 / 0.6 / 0.7) on Qwen3-30B-A3B all collapse to single-token repetition.** Every threshold sits below the coherent-generation envelope under pure ternary quantisation; the cliff is below 0.5. Evidence: `/Volumes/Syn Archive/models/compressed/qwen3-30b-a3b/sweep/threshold_coherence_results.json`. Driver: `benchmarks/sweep_qwen3_threshold_coherence_2026-05-28.py`.
+
+2. **Per-tensor sensitivity scan (Qwen3 + Gemma-4-26B-A4B reference) confirms a smeared distribution.** Std ~0.01, errors clustered at relative_error ~0.45 across 18,624 Qwen3 layers and 7,885 Gemma-4 layers; no concentrated tail (Qwen3: 13 layers ≥0.54, 0 ≥0.60; Gemma-4: 5 layers ≥0.54, 0 ≥0.60). Per-layer INT4 routing is the wrong lever against a smeared distribution. Evidence:
+   - `benchmarks/sensitivity_scan_qwen3-30b-a3b_2026-05-28.json`
+   - `benchmarks/sensitivity_scan_gemma4-26b-a4b_2026-05-28.json`
+   - Driver: `benchmarks/sensitivity_scan_moe_2026-05-28.py`
+
+3. **Gemma-4-26B-A4B / Gemopus-4-26B-A4B carry the same exposure.** Their per-layer error distribution is nearly identical to Qwen3's; their `fidelity_pass: True` measures only ternary-layer count (`assert_configurational_fidelity` asserts `expected ± 65`), never reconstruction or generation quality. Their generation coherence has never been measured.
+
+4. **Dormant-scan finding (resolved):** `full_convert`'s INT4 routing sourced its sensitivity map from a single hard-coded path `benchmarks/gemma4_e4b_dryrun.json`, whose entries match only Gemma-4-family weight names. Non-Gemma MoE compressions (Qwen3 etc.) silently routed 0 layers to INT4 because no names matched. Gemma-4-26B-A4B's "10 INT4 layers" were cross-applied E4B name matches, not a 26B-A4B-specific scan. **Patched:** `full_convert` accepts a `sensitivity_map_path` parameter, supports both the new `sensitivity_scan_*.json` and legacy dryrun schemas, logs match rate, and warns when the legacy fallback covers 0 layers. Unit-tested in `tests/test_convert_sensitivity_map.py`.
+
+**In flight (round-2 scan, 2026-05-28):** per-channel relative error on Qwen3 + Gemma-4 (cheapest lever; α per output channel rather than per tensor); per-tensor scan on Phi-4-14B as dense reference (Mistral-7B not on disk; Phi-4 @0.7 is the documented dense collapse case).
+
+**Position on M1 deliverables:** the Milestone-1 inference machinery (`terncore.moe` bank loader + custom block + lifecycle, PRs #40/#41/#42) is independent of this finding and verified working. P145/P146 patent footing intact. Compression-quality is the open central question.
+
+---
+
 ### load_packed_model rewrite — production manifest support
 
 **Surfaced:** 2026-05-03 Phase 2 Stage C round-trip on production gemopus-4-e4b artefact (FP16 silent skip). **Scope expanded 2026-05-07** during Commit 1 design probe — discovered the ternary path has the same parameter-path traversal flaw, manifesting as silent module-structure corruption rather than silent skipping.
