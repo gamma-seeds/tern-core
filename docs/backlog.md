@@ -25,9 +25,19 @@ fix scope. Closed items move to a "Closed" section at the bottom.
 
 4. **Dormant-scan finding (resolved):** `full_convert`'s INT4 routing sourced its sensitivity map from a single hard-coded path `benchmarks/gemma4_e4b_dryrun.json`, whose entries match only Gemma-4-family weight names. Non-Gemma MoE compressions (Qwen3 etc.) silently routed 0 layers to INT4 because no names matched. Gemma-4-26B-A4B's "10 INT4 layers" were cross-applied E4B name matches, not a 26B-A4B-specific scan. **Patched:** `full_convert` accepts a `sensitivity_map_path` parameter, supports both the new `sensitivity_scan_*.json` and legacy dryrun schemas, logs match rate, and warns when the legacy fallback covers 0 layers. Unit-tested in `tests/test_convert_sensitivity_map.py`.
 
-**In flight (round-2 scan, 2026-05-28):** per-channel relative error on Qwen3 + Gemma-4 (cheapest lever; α per output channel rather than per tensor); per-tensor scan on Phi-4-14B as dense reference (Mistral-7B not on disk; Phi-4 @0.7 is the documented dense collapse case).
+**Round-2 measurements (2026-05-28, concluded):** both cheap probes returned *confirm-not-rescue*, hardening the smeared verdict.
 
-**Position on M1 deliverables:** the Milestone-1 inference machinery (`terncore.moe` bank loader + custom block + lifecycle, PRs #40/#41/#42) is independent of this finding and verified working. P145/P146 patent footing intact. Compression-quality is the open central question.
+5. **Per-channel α is not the lever — it is worse.** Computing reconstruction error with α per output channel (instead of per tensor) at threshold 0.7 shifts the whole distribution upward, not just its tail:
+   - Qwen3: mean 0.4477 → 0.5329 (+0.085); max 0.600 → 0.694; layers ≥0.54 went from 13 → 1620.
+   - Gemma-4-26B-A4B: mean 0.4536 → 0.5348 (+0.081); max 0.567 → 0.627; layers ≥0.54 went from 5 → 1038.
+   - Stdev tightens slightly (~0.0075) — i.e. uniformly worse. Per-channel α buys no headroom here.
+   - Evidence: `benchmarks/sensitivity_scan_qwen3-30b-a3b_per_channel_2026-05-28.json`, `benchmarks/sensitivity_scan_gemma4-26b-a4b_per_channel_2026-05-28.json`.
+
+6. **Dense reference (Phi-4-14B) shows the same smeared shape.** Per-tensor scan on Phi-4: mean 0.5447, p99 0.6304, max 0.6576; 53 of 160 layers ≥0.54, 6 ≥0.60. Tightly clustered, same structural pattern as the MoE models. Attention is uniformly the worst category across all three architectures (Phi-4 attn mean 0.559 vs MLP 0.531; Qwen3 attn 0.494 vs expert 0.447; Gemma-4 attn 0.495 vs other 0.453). Phi-4 ternary @0.7 collapse (already documented) sits in the same numerical neighbourhood, confirming the smeared pattern is a general property of ternary @0.7 on transformer architectures, **not** Qwen3-specific or MoE-specific. Evidence: `benchmarks/sensitivity_scan_phi-4_2026-05-28.json`.
+
+7. **Implication for the Mistral-7B 297.6 tok/s headline:** Mistral-7B sits in the same dense-transformer class as Phi-4. Its coherence was likewise never gated at compression time (`fidelity_pass` only checks layer count). The headline figure is a throughput measurement on a model whose generation coherence is unverified. Worth knowing before it surfaces in partner conversations.
+
+**Position on M1 deliverables:** the Milestone-1 inference machinery (`terncore.moe` bank loader + custom block + lifecycle, PRs #40/#41/#42) is independent of this finding and verified working. P145/P146 patent footing intact. Compression-quality is **a research workstream, not a contained patch** — per-channel and lower-threshold both fail to rescue; the deeper interventions (outlier protection, AWQ/SqueezeLLM-style calibration, substantially-more-INT4 mixed precision, QAT fine-tuning, or larger-than-ternary precision floors) are out-of-scope of this PR stack and need their own scoping.
 
 ---
 
