@@ -176,6 +176,27 @@ Test coverage: synthetic fixture mirroring Gemma 4 MoE expert structure (small N
 
 ---
 
+## Test Infrastructure
+
+### Full-suite environmental friction — HF cache / model-download / archive-volume dependencies
+
+**Surfaced:** 2026-06-01 during the qwen3 arch-preset + dense-adapter merge (`a372f5f` / `3145720`). A full `pytest` run reports **8 failures that are environmental, not logic** — they pass or fail purely on host state (cache permissions, network, external volume), independent of any code change in that run.
+
+**The 8 affected tests and their friction source:**
+
+1. `tests/test_e4b_regression.py` — `test_baseline_manifest_reads_cleanly`, `test_baseline_has_no_stacking_metadata`, `test_baseline_reconstruct_all_succeeds` — depend on a production manifest artefact reachable on the `Syn Archive` volume.
+2. `tests/test_load_packed_model_production_integration.py::test_load_packed_model_production_integration[phi-4]` — production manifest read.
+3. `tests/test_packed_linear_metal.py::test_production_data_e2e_gemopus` — gemopus production data on the archive volume.
+4. `tests/test_ppl_bench_methodology.py` — `test_fp16_baseline_tinyllama_smoke`, `test_autoregressive_real_model_tinyllama_no_hook`, `test_autoregressive_real_model_tinyllama_with_hook_cpu` — require downloading `TinyLlama/TinyLlama-1.1B-Chat-v1.0`; observed failure mode is a `PermissionError` writing to `HF_HOME` at `/Volumes/Syn Archive/cache/huggingface/hub/...refs/main` (HF-cache lock / permission on the external volume).
+
+**Common root:** these exercise real model weights or large artefacts gated behind (a) `HF_HOME` pointed at the `Syn Archive` external volume (mount + write-permission dependency), (b) a HuggingFace download path (network + cache-lock), or (c) a production `.tern-model` manifest staged on archive. When the volume is mounted clean and the cache is writable they pass; otherwise they noise the run.
+
+**Framing:** persistent environmental friction; needs an audit pass — not blocking phase work but noising full-suite runs. The 616 logic tests (including all adapter/preset/convert suites) run clean regardless.
+
+**Recommended scope (no fix this turn):** an audit pass to (i) mark these with a `requires_archive` / `requires_hf_download` marker so a default `pytest` run can deselect them, (ii) confirm the `HF_HOME` cache-permission story on the archive volume, and (iii) document the mount precondition for the integration tier. No code change made this turn — logged for a dedicated infra session.
+
+---
+
 ## Closed
 
 ### reconstruct_all suffix-doubling — production manifest support
