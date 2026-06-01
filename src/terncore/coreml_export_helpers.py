@@ -8,7 +8,11 @@ co-location with coreml_export.py was incidental.
 
 from __future__ import annotations
 
+import logging
+
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 FP16_MAX = 65504.0
 
@@ -39,7 +43,7 @@ def _validate_ternary2_alpha(alpha: float, name: str) -> None:
         )
 
 
-def _validate_group_scales(scales: np.ndarray, name: str) -> None:
+def _validate_group_scales(scales: np.ndarray, name: str) -> np.ndarray:
     """Array form of :func:`_validate_ternary2_alpha` for ``ternary_g128``.
 
     A per-group scale array carries one symmetric scale per group of
@@ -49,13 +53,21 @@ def _validate_group_scales(scales: np.ndarray, name: str) -> None:
     rather than failing anonymously:
 
     - **Non-finite** (NaN/Inf) → upstream ingest/quantiser bug.
-    - **Zero / sub-floor magnitude** → an Inf-risk scale (division or
-      reciprocal downstream produces Inf); also flags a group the ingest
-      should have collapsed to the all-zero sentinel.
+    - **Zero / below the FP16 smallest-subnormal** → not representable in
+      FP16 at all; an upstream ingest bug or a group the ingest should
+      have collapsed to the all-zero sentinel.
+    - **FP16-subnormal band** (``smallest_subnormal ≤ |s| < smallest_normal``)
+      → representable, but the Apple Neural Engine flushes FP16 subnormals
+      to zero, which would silently zero the group's contribution. These
+      are **clamped up to the FP16 smallest-normal** (warn-level log naming
+      the tensor + count) rather than rejected — empirically these are a
+      handful of legitimate tiny-magnitude groups (e.g. early-layer
+      SwiGLU ``gate_proj`` on Bonsai 8B), and clamping a ±5e-05 scale to
+      ±6.1e-05 is a negligible perturbation of an already-tiny weight.
     - **FP16 overflow** → casts to Inf and breaks palettisation.
 
-    Loud raise over silent fallback — a degenerate group must surface,
-    not be clamped.
+    Returns the (possibly clamped) scale array — callers must use the
+    returned array so the clamp reaches the emitted ``constexpr`` weight.
     """
     scales = np.asarray(scales)
 
@@ -69,16 +81,37 @@ def _validate_group_scales(scales: np.ndarray, name: str) -> None:
             f"Inf/NaN and break downstream palettisation. Refusing to emit."
         )
 
-    floor = np.finfo(np.float16).tiny  # smallest positive FP16 normal
-    degenerate = np.argwhere(np.abs(scales) < floor)
-    if degenerate.size:
-        idx = tuple(int(i) for i in degenerate[0])
+    min_subnormal = np.finfo(np.float16).smallest_subnormal  # 5.96e-08
+    min_normal = np.finfo(np.float16).tiny  # smallest positive FP16 normal
+    abs_s = np.abs(scales)
+
+    # Hard reject: zero / below the smallest representable FP16 subnormal.
+    hard = np.argwhere(abs_s < min_subnormal)
+    if hard.size:
+        idx = tuple(int(i) for i in hard[0])
         raise ValueError(
-            f"Zero / sub-floor per-group scale {scales[idx]} for "
-            f"ternary_g128 layer {name} at group index {idx}. A scale at "
-            f"or below the FP16 floor (±{floor:.2e}) is an Inf risk "
-            f"downstream and signals a group the ingest should have "
-            f"collapsed to the all-zero sentinel. Refusing to emit."
+            f"Zero / sub-subnormal per-group scale {scales[idx]} for "
+            f"ternary_g128 layer {name} at group index {idx}. A scale "
+            f"below the FP16 smallest-subnormal (±{min_subnormal:.2e}) is "
+            f"not FP16-representable and signals a group the ingest should "
+            f"have collapsed to the all-zero sentinel. Refusing to emit."
+        )
+
+    # Subnormal band: representable but an ANE subnormal-flush risk → clamp
+    # up to the smallest FP16 normal (sign-preserving) and warn.
+    band = (abs_s >= min_subnormal) & (abs_s < min_normal)
+    n_band = int(band.sum())
+    if n_band:
+        scales = scales.copy()  # np.frombuffer views are read-only
+        signs = np.where(scales < 0, -1.0, 1.0).astype(scales.dtype)
+        scales = np.where(
+            band, signs * scales.dtype.type(min_normal), scales
+        ).astype(scales.dtype)
+        logger.warning(
+            "ternary_g128 %s: clamped %d sub-normal per-group scale(s) "
+            "up to FP16 smallest-normal (±%.3e) — ANE subnormal-flush "
+            "risk. Negligible perturbation of tiny-magnitude groups.",
+            name, n_band, min_normal,
         )
 
     overflow = np.argwhere(np.abs(scales) > FP16_MAX)
@@ -90,6 +123,8 @@ def _validate_group_scales(scales: np.ndarray, name: str) -> None:
             f"(±{int(FP16_MAX)}); the cast would silently produce Inf. "
             f"Refusing to emit."
         )
+
+    return scales
 
 
 def _cast_fp16_retain_with_guards(
