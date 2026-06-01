@@ -30,6 +30,7 @@ from terncore.sparse import unpack_ternary_weights
 from terncore.arch_presets import RopeConfig
 from terncore.coreml_export_helpers import (
     _validate_ternary2_alpha,
+    _validate_group_scales,
     _cast_fp16_retain_with_guards,
 )
 import torch
@@ -280,6 +281,35 @@ def _load_weight_for_coreml(reader: TernModelReader, name: str):
         scales = np.full((shape[0], n_blocks), alpha, dtype=np.float16)
 
         return "int4", int4_data, scales, padded_in
+
+    elif dtype == "ternary_g128":
+        # Per-group symmetric ternary → the same native iOS-18 group-scale
+        # op as int4_block32 (constexpr_blockwise_shift_scale), with the
+        # real per-group scales and block_size = group_size (128). No
+        # uniform-alpha replication; no slicing.
+        raw = reader.read_layer_data(name)
+        buf = io.BytesIO(raw)
+        group_size = struct.unpack("<I", buf.read(4))[0]
+        packed_size = struct.unpack("<I", buf.read(4))[0]
+        packed_bytes = buf.read(packed_size)
+        scales_size = struct.unpack("<I", buf.read(4))[0]
+        scales_bytes = buf.read(scales_size)
+
+        scale_shape = entry["scale_shape"]  # [out, num_groups]
+        scales = np.frombuffer(scales_bytes, dtype=np.float16).reshape(scale_shape)
+        _validate_group_scales(scales, name)
+
+        packed_tensor = torch.frombuffer(bytearray(packed_bytes), dtype=torch.uint8)
+        ternary = unpack_ternary_weights(packed_tensor, torch.Size(shape)).numpy()
+
+        in_f = shape[1]
+        if in_f % group_size != 0:
+            raise ValueError(
+                f"ternary_g128 {name}: input dim {in_f} not a multiple of "
+                f"group_size {group_size}."
+            )
+        int4_data = ternary.astype(np.int8).astype(types.np_int4_dtype)
+        return "int4", int4_data, scales, in_f
 
     elif dtype == "float16":
         tensors = reader.reconstruct_layer(name)

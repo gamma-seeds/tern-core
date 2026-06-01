@@ -494,6 +494,70 @@ class TernModelWriter:
             bias=bias,
         )
 
+    def add_ternary_g128_layer(
+        self,
+        name: str,
+        packed_weights: bytes,
+        scales: bytes,
+        shape: list[int],
+        scale_shape: list[int],
+        group_size: int = 128,
+        sparsity_bitmap: Optional[bytes] = None,
+        **metadata: Any,
+    ) -> None:
+        """
+        Add a pre-packed per-group symmetric ternary layer (``ternary_g128``).
+
+        Additive within the v2 format — a new per-entry ``dtype`` that the
+        existing reader dispatch routes through, leaving every other
+        artefact untouched. The weights are 2-bit packed exactly like
+        ``ternary2``; the difference is a ``[out, num_groups]`` symmetric
+        FP16 scale array in place of the single per-layer ``alpha`` (no
+        bias / zero-point — ternary symmetry makes the scale sufficient).
+
+        Args:
+            name:            Layer name.
+            packed_weights:  2-bit packed trit bytes (from pack_ternary_weights).
+            scales:          FP16 per-group scale bytes, ``[out, num_groups]``
+                             row-major (scale axis aligned to the input dim;
+                             the locked ``out_groups_row_major`` layout).
+            shape:           Original weight shape ``[out_features, in_features]``.
+            scale_shape:     Scale array shape ``[out_features, num_groups]``.
+            group_size:      Weights per group along the input axis (default 128).
+            sparsity_bitmap: Optional sparsity bitmap bytes.
+            **metadata:      Additional fields (sensitivity_score, quant_error,
+                             bias as torch.Tensor).
+        """
+        num_params = 1
+        for s in shape:
+            num_params *= s
+
+        bias_tensor = metadata.pop("bias", None)
+        bias_bytes = None
+        has_bias = False
+        if bias_tensor is not None:
+            has_bias = True
+            bias_bytes = bias_tensor.detach().float().numpy().tobytes()
+
+        self._layers.append({
+            "name": name,
+            "dtype": "ternary_g128",
+            "shape": shape,
+            "scale_shape": scale_shape,
+            "group_size": group_size,
+            "scale_layout": "out_groups_row_major",
+            "num_params": num_params,
+            "sensitivity_score": metadata.get("sensitivity_score", 0.0),
+            "quant_error": metadata.get("quant_error", 0.0),
+            "has_bias": has_bias,
+            "has_bitmap": sparsity_bitmap is not None,
+            # Binary data (not in manifest JSON)
+            "_packed": packed_weights,
+            "_scales": scales,
+            "_bitmap": sparsity_bitmap,
+            "_bias": bias_bytes,
+        })
+
     def _add_fp16_layer(
         self,
         name: str,
@@ -543,6 +607,8 @@ class TernModelWriter:
 
             if layer["dtype"] == "ternary2":
                 self._write_ternary_layer(weight_buf, layer)
+            elif layer["dtype"] == "ternary_g128":
+                self._write_ternary_g128_layer(weight_buf, layer)
             elif layer["dtype"] == "int4_block32":
                 self._write_int4_layer(weight_buf, layer)
             else:
@@ -585,8 +651,11 @@ class TernModelWriter:
         weights_offset = _align_to(manifest_offset + manifest_size, ALIGNMENT)
         manifest_padding = weights_offset - manifest_offset - manifest_size
 
-        # Layer counts
-        num_ternary = sum(1 for l in self._layers if l["dtype"] == "ternary2")
+        # Layer counts — ternary_g128 counts in the ternary bucket.
+        num_ternary = sum(
+            1 for l in self._layers
+            if l["dtype"] in ("ternary2", "ternary_g128")
+        )
         num_protected = sum(1 for l in self._layers if l["dtype"] == "float16")
 
         # --- Build header (256 bytes) ---
@@ -644,6 +713,45 @@ class TernModelWriter:
         # packed weights
         buf.write(struct.pack("<I", len(packed)))
         buf.write(packed)
+        # bitmap
+        if bitmap is not None:
+            buf.write(struct.pack("<I", len(bitmap)))
+            buf.write(bitmap)
+        else:
+            buf.write(struct.pack("<I", 0))
+        # bias
+        if bias is not None:
+            buf.write(struct.pack("<I", len(bias)))
+            buf.write(bias)
+        else:
+            buf.write(struct.pack("<I", 0))
+
+    def _write_ternary_g128_layer(self, buf: io.BytesIO, layer: dict) -> None:
+        """Write a per-group symmetric ternary layer's binary data.
+
+        Layout mirrors ``ternary2`` with the scalar ``alpha`` replaced by
+        a length-prefixed ``[out, num_groups]`` FP16 scale array, and a
+        leading ``group_size``:
+
+            group_size   (uint32)
+            packed_size  (uint32) + packed trit bytes
+            scales_size  (uint32) + scale bytes (FP16, out_groups_row_major)
+            bitmap_size  (uint32) + bitmap bytes (or 0)
+            bias_size    (uint32) + bias bytes (or 0)
+        """
+        packed = layer["_packed"]
+        scales = layer["_scales"]
+        bitmap = layer.get("_bitmap")
+        bias = layer.get("_bias")
+
+        # group_size (uint32)
+        buf.write(struct.pack("<I", layer["group_size"]))
+        # packed weights
+        buf.write(struct.pack("<I", len(packed)))
+        buf.write(packed)
+        # per-group scales
+        buf.write(struct.pack("<I", len(scales)))
+        buf.write(scales)
         # bitmap
         if bitmap is not None:
             buf.write(struct.pack("<I", len(bitmap)))
@@ -734,6 +842,9 @@ class TernModelWriter:
                     if layer["dtype"] == "ternary2":
                         self._write_ternary_layer(layer_buf, layer)
                         num_ternary += 1
+                    elif layer["dtype"] == "ternary_g128":
+                        self._write_ternary_g128_layer(layer_buf, layer)
+                        num_ternary += 1  # count in ternary bucket for header
                     elif layer["dtype"] == "int4_block32":
                         self._write_int4_layer(layer_buf, layer)
                         num_ternary += 1  # count in ternary bucket for header
@@ -1071,6 +1182,8 @@ class TernModelReader:
 
         if entry["dtype"] == "ternary2":
             return self._reconstruct_ternary(buf, entry)
+        elif entry["dtype"] == "ternary_g128":
+            return self._reconstruct_ternary_g128(buf, entry)
         elif entry["dtype"] == "int4_block32":
             return self._reconstruct_int4(buf, entry)
         elif entry["dtype"] == "float16":
@@ -1100,6 +1213,63 @@ class TernModelReader:
 
         # Scale by alpha to get reconstructed weights
         weight = ternary * alpha
+
+        result: dict[str, torch.Tensor] = {"weight": weight}
+
+        # Skip bitmap
+        bitmap_size = struct.unpack("<I", buf.read(4))[0]
+        if bitmap_size > 0:
+            buf.read(bitmap_size)
+
+        # Read bias if present
+        bias_size = struct.unpack("<I", buf.read(4))[0]
+        if bias_size > 0:
+            bias_bytes = buf.read(bias_size)
+            result["bias"] = torch.frombuffer(
+                bytearray(bias_bytes), dtype=torch.float32
+            ).clone()
+
+        return result
+
+    def _reconstruct_ternary_g128(
+        self, buf: io.BytesIO, entry: dict
+    ) -> dict[str, torch.Tensor]:
+        """Reconstruct a per-group symmetric ternary layer.
+
+        Unpacks the 2-bit trits, then applies the ``[out, num_groups]``
+        symmetric scale along the input axis — the inverse of the ingest
+        derivation, no transpose (the on-disk ``out_groups_row_major``
+        layout feeds the reshape directly).
+        """
+        shape = entry["shape"]
+        out_f, in_f = shape[0], shape[1]
+        group_size = entry["group_size"]
+        scale_shape = entry["scale_shape"]
+        if in_f % group_size != 0:
+            raise ValueError(
+                f"ternary_g128 layer {entry['name']!r}: input dim {in_f} "
+                f"is not a multiple of group_size {group_size}."
+            )
+        num_groups = in_f // group_size
+
+        # Read group_size (stored), packed trits, per-group scales.
+        struct.unpack("<I", buf.read(4))[0]  # stored group_size (== entry)
+        packed_size = struct.unpack("<I", buf.read(4))[0]
+        packed_bytes = buf.read(packed_size)
+        packed_tensor = torch.frombuffer(bytearray(packed_bytes), dtype=torch.uint8)
+
+        scales_size = struct.unpack("<I", buf.read(4))[0]
+        scales_bytes = buf.read(scales_size)
+        scales = torch.frombuffer(
+            bytearray(scales_bytes), dtype=torch.float16
+        ).clone().to(torch.float32).reshape(scale_shape)  # [out, num_groups]
+
+        # Unpack 2-bit → trits {-1,0,+1}, apply per-group scale along input axis.
+        trits = unpack_ternary_weights(packed_tensor, torch.Size(shape)).to(torch.float32)
+        weight = (
+            trits.reshape(out_f, num_groups, group_size)
+            * scales.reshape(out_f, num_groups, 1)
+        ).reshape(out_f, in_f)
 
         result: dict[str, torch.Tensor] = {"weight": weight}
 
@@ -1503,6 +1673,58 @@ class TernModelReader:
 
                 loaded_keys.append(f"{module_path}.packed_weights")
                 loaded_keys.append(f"{module_path}.alpha")
+                if bias is not None:
+                    loaded_keys.append(f"{module_path}.bias")
+
+            elif entry["dtype"] == "ternary_g128":
+                # Per-group symmetric: group_size + packed trits +
+                # [out, num_groups] scales (+ optional bitmap, bias).
+                group_size = struct.unpack("<I", buf.read(4))[0]
+                packed_size = struct.unpack("<I", buf.read(4))[0]
+                packed_bytes = buf.read(packed_size)
+                packed_tensor = torch.frombuffer(
+                    bytearray(packed_bytes), dtype=torch.uint8
+                ).clone()
+
+                scales_size = struct.unpack("<I", buf.read(4))[0]
+                scales_bytes = buf.read(scales_size)
+                group_scales = torch.frombuffer(
+                    bytearray(scales_bytes), dtype=torch.float16
+                ).clone().to(torch.float32).reshape(entry["scale_shape"])
+
+                bitmap_size = struct.unpack("<I", buf.read(4))[0]
+                bitmap_tensor = None
+                if bitmap_size > 0:
+                    bitmap_data = buf.read(bitmap_size)
+                    bitmap_tensor = torch.frombuffer(
+                        bytearray(bitmap_data), dtype=torch.uint8
+                    ).clone()
+
+                bias_size = struct.unpack("<I", buf.read(4))[0]
+                bias = None
+                if bias_size > 0:
+                    bias_data = buf.read(bias_size)
+                    bias = torch.frombuffer(
+                        bytearray(bias_data), dtype=torch.float32
+                    ).clone()
+
+                packed_layer = PackedTernaryLinear.from_packed_group_data(
+                    packed_weights=packed_tensor,
+                    group_scales=group_scales,
+                    group_size=group_size,
+                    in_features=entry["shape"][1],
+                    out_features=entry["shape"][0],
+                    bias=bias,
+                    sparsity_bitmap=bitmap_tensor,
+                )
+
+                _replace_submodule_or_raise(
+                    model, module_path, packed_layer,
+                    diagnostic_entry_name=raw_name,
+                )
+
+                loaded_keys.append(f"{module_path}.packed_weights")
+                loaded_keys.append(f"{module_path}.group_scales")
                 if bias is not None:
                     loaded_keys.append(f"{module_path}.bias")
 

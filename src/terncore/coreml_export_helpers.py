@@ -39,6 +39,59 @@ def _validate_ternary2_alpha(alpha: float, name: str) -> None:
         )
 
 
+def _validate_group_scales(scales: np.ndarray, name: str) -> None:
+    """Array form of :func:`_validate_ternary2_alpha` for ``ternary_g128``.
+
+    A per-group scale array carries one symmetric scale per group of
+    weights. At group granularity the degenerate cases the scalar guard
+    watches for are *more* likely than per-layer, so each is checked per
+    element and the raise names the offending ``(row, group)`` index
+    rather than failing anonymously:
+
+    - **Non-finite** (NaN/Inf) → upstream ingest/quantiser bug.
+    - **Zero / sub-floor magnitude** → an Inf-risk scale (division or
+      reciprocal downstream produces Inf); also flags a group the ingest
+      should have collapsed to the all-zero sentinel.
+    - **FP16 overflow** → casts to Inf and breaks palettisation.
+
+    Loud raise over silent fallback — a degenerate group must surface,
+    not be clamped.
+    """
+    scales = np.asarray(scales)
+
+    nonfinite = np.argwhere(~np.isfinite(scales))
+    if nonfinite.size:
+        idx = tuple(int(i) for i in nonfinite[0])
+        raise ValueError(
+            f"Non-finite per-group scale {scales[idx]} for ternary_g128 "
+            f"layer {name} at group index {idx}. This indicates an "
+            f"upstream ingest/quantiser bug; the FP16 cast would produce "
+            f"Inf/NaN and break downstream palettisation. Refusing to emit."
+        )
+
+    floor = np.finfo(np.float16).tiny  # smallest positive FP16 normal
+    degenerate = np.argwhere(np.abs(scales) < floor)
+    if degenerate.size:
+        idx = tuple(int(i) for i in degenerate[0])
+        raise ValueError(
+            f"Zero / sub-floor per-group scale {scales[idx]} for "
+            f"ternary_g128 layer {name} at group index {idx}. A scale at "
+            f"or below the FP16 floor (±{floor:.2e}) is an Inf risk "
+            f"downstream and signals a group the ingest should have "
+            f"collapsed to the all-zero sentinel. Refusing to emit."
+        )
+
+    overflow = np.argwhere(np.abs(scales) > FP16_MAX)
+    if overflow.size:
+        idx = tuple(int(i) for i in overflow[0])
+        raise ValueError(
+            f"Per-group scale {scales[idx]} for ternary_g128 layer "
+            f"{name} at group index {idx} exceeds FP16 range "
+            f"(±{int(FP16_MAX)}); the cast would silently produce Inf. "
+            f"Refusing to emit."
+        )
+
+
 def _cast_fp16_retain_with_guards(
     weight_fp32: np.ndarray, name: str
 ) -> np.ndarray:

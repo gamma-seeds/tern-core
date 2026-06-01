@@ -91,6 +91,13 @@ class PackedTernaryLinear(nn.Module):
             "sparsity_bitmap", torch.zeros(n_bitmap_bytes, dtype=torch.uint8)
         )
 
+        # Per-group symmetric scales (ternary_g128). Default None → the
+        # scalar-alpha path is unchanged. When set to a [out, num_groups]
+        # tensor with group_size > 1, the forward applies per-group
+        # scaling along the input axis instead of the single alpha.
+        self.register_buffer("group_scales", None)
+        self.group_size: int = 0
+
         if bias:
             self.bias = nn.Parameter(torch.zeros(out_features))
         else:
@@ -241,6 +248,80 @@ class PackedTernaryLinear(nn.Module):
 
         return layer
 
+    @classmethod
+    def from_packed_group_data(
+        cls,
+        packed_weights: torch.Tensor,
+        group_scales: torch.Tensor,
+        group_size: int,
+        in_features: int,
+        out_features: int,
+        bias: Optional[torch.Tensor] = None,
+        sparsity_bitmap: Optional[torch.Tensor] = None,
+    ) -> "PackedTernaryLinear":
+        """Create a per-group symmetric (``ternary_g128``) packed layer.
+
+        Like :meth:`from_packed_data`, but carries a ``[out, num_groups]``
+        symmetric scale array applied per group along the input axis at
+        forward time, in place of the single ``alpha``. ``alpha`` stays at
+        1.0 (unused on this path); the per-group scaling is exact.
+
+        Args:
+            packed_weights:  Uint8 tensor with 2-bit packed trits.
+            group_scales:    ``[out, num_groups]`` FP scale tensor (row-major).
+            group_size:      Weights per group along the input axis.
+            in_features:     Input feature dimension.
+            out_features:    Output feature dimension.
+            bias:            Optional bias tensor.
+            sparsity_bitmap: Optional pre-built sparsity bitmap.
+        """
+        layer = cls(
+            in_features=in_features,
+            out_features=out_features,
+            bias=bias is not None,
+            alpha=1.0,
+        )
+        layer.packed_weights.copy_(packed_weights)
+        layer.group_size = int(group_size)
+        layer.group_scales = group_scales.to(torch.float32).reshape(
+            out_features, in_features // group_size
+        )
+
+        if sparsity_bitmap is not None:
+            layer.sparsity_bitmap.copy_(sparsity_bitmap)
+        else:
+            layer.sparsity_bitmap.copy_(
+                _build_bitmap_from_packed(packed_weights, out_features, in_features)
+            )
+
+        if bias is not None:
+            layer.bias.data.copy_(bias)
+
+        return layer
+
+    def _forward_group(self, x: torch.Tensor) -> torch.Tensor:
+        """Per-group symmetric forward (ternary_g128).
+
+        Reference dequant-and-linear: unpack 2-bit → trits, apply the
+        per-group scale along the input axis, then F.linear. This is the
+        fidelity path (CoreML's constexpr_blockwise_shift_scale is the
+        throughput path); it does not route through the scalar-alpha C /
+        Metal kernels, which assume a single scale.
+        """
+        out_f, in_f = self.out_features, self.in_features
+        num_groups = self.group_scales.shape[1]
+        trits = unpack_ternary_weights(
+            self.packed_weights, torch.Size([out_f, in_f])
+        ).to(torch.float32)
+        weight = (
+            trits.reshape(out_f, num_groups, self.group_size)
+            * self.group_scales.reshape(out_f, num_groups, 1)
+        ).reshape(out_f, in_f)
+        output = torch.nn.functional.linear(x, weight.to(x.dtype))
+        if self.bias is not None:
+            output = output + self.bias
+        return output
+
     def _initialise_metal_buffers(self) -> None:
         """One-shot lazy init of GPU-resident weight buffers.
 
@@ -330,6 +411,11 @@ class PackedTernaryLinear(nn.Module):
         Returns:
             Output tensor (..., out_features).
         """
+        # Per-group symmetric (ternary_g128) takes the dequant reference
+        # path — the scalar-alpha C / Metal kernels carry one scale only.
+        if self.group_size and self.group_scales is not None:
+            return self._forward_group(x)
+
         if x.device.type == "mps":
             if not self._metal_buffers_initialised:
                 self._initialise_metal_buffers()

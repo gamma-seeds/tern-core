@@ -112,7 +112,10 @@ Each entry in the `layers` array describes one layer:
 | Field              | Type   | Required | Description |
 |--------------------|--------|----------|-------------|
 | `name`             | string | yes      | Layer name (matches HuggingFace state_dict key) |
-| `dtype`            | string | yes      | `"ternary2"` (2-bit packed) or `"float16"` |
+| `dtype`            | string | yes      | `"ternary2"` (2-bit packed, per-layer α), `"ternary_g128"` (2-bit packed, per-group symmetric scales), `"int4_block32"`, or `"float16"` |
+| `group_size`       | int    | g128     | Weights per group along the input axis (ternary_g128; typically 128) |
+| `scale_shape`      | array  | g128/int4| Per-group scale array shape `[out_features, num_groups]` |
+| `scale_layout`     | string | g128     | `"out_groups_row_major"` — scale axis aligned to the input dim (no transpose at load) |
 | `shape`            | array  | yes      | Weight tensor dimensions, e.g. `[2048, 2048]` |
 | `num_params`       | int    | yes      | Product of shape dimensions |
 | `threshold`        | float  | ternary  | Quantisation threshold used |
@@ -126,7 +129,9 @@ Each entry in the `layers` array describes one layer:
 | `size`             | int    | yes      | Total bytes for this layer in weight data |
 
 **dtype values:**
-- `"ternary2"` — 2-bit packed ternary weights (4 weights per byte)
+- `"ternary2"` — 2-bit packed ternary weights (4 weights per byte), single per-layer scale `alpha`
+- `"ternary_g128"` — 2-bit packed ternary weights with **per-group symmetric scales**: one FP16 scale per group of `group_size` weights along the input axis, no bias/zero-point (ternary symmetry makes the scale sufficient). Targets QAT-ternary substrates (e.g. PrismML Bonsai) that carry genuine per-group structure. Additive within v2 — see §4.1b.
+- `"int4_block32"` — INT4 block-wise quantised weights with per-block scales
 - `"float16"` — IEEE 754 half-precision (2 bytes per weight)
 
 ## 4. Weight Data Section
@@ -161,6 +166,46 @@ Within each ternary layer's data block:
 - `packed_size` = ceil(num_params / 4) bytes
 - `bitmap_size` = ceil(num_params / 8) bytes (if present)
 - `bias_size` = out_features * 4 bytes (float32)
+
+### 4.1b Per-group symmetric ternary layout (dtype="ternary_g128")
+
+Mirrors §4.1 with the scalar `alpha` replaced by a length-prefixed
+`[out_features, num_groups]` FP16 scale array, and a leading
+`group_size`:
+
+```
++----------------------------+
+| group_size (uint32, 4 B)   |  weights per group along input axis (e.g. 128)
++----------------------------+
+| packed_size (uint32, 4 B)  |
++----------------------------+
+| packed_weights (N bytes)   |  2 bits per weight, 4 per byte (same codec as ternary2)
++----------------------------+
+| scales_size (uint32, 4 B)  |
++----------------------------+
+| scales_data (S bytes)      |  FP16, [out_features, num_groups] row-major
++----------------------------+
+| bitmap_size (uint32, 4 B)  |  0 if no bitmap
++----------------------------+
+| bitmap_data (M bytes)      |  1 bit per weight (optional)
++----------------------------+
+| bias_size (uint32, 4 B)    |  0 if no bias
++----------------------------+
+| bias_data (K bytes)        |  float32 bias vector (optional)
++----------------------------+
+| alignment padding          |  0x00 bytes to next 32-byte boundary
++----------------------------+
+```
+
+- `num_groups` = `in_features / group_size` (input dim must be group-aligned)
+- `scales_size` = `out_features * num_groups * 2` bytes (FP16)
+- **Scale layout LOCKED**: `[out_features, num_groups]` row-major, scale
+  axis aligned to the input dim (the MLX orientation). The CoreML
+  emitter (`constexpr_blockwise_shift_scale`, block_size = `group_size`)
+  and the torch loader (`PackedTernaryLinear.from_packed_group_data`)
+  consume it directly with no transpose.
+- Reconstruction: `w[o, g*group_size : (g+1)*group_size] = trit * scales[o, g]`.
+  Symmetric — the scale alone reconstructs the weight; no zero-point.
 
 ### 4.2 Protected layer layout (dtype="float16")
 
@@ -247,6 +292,16 @@ All multi-byte fields are **little-endian** throughout. This matches:
 | 2       | Production format with manifest, alignment, CRC32 (this spec) |
 
 Readers must reject files with `version > 2`. Writers must set `version = 2`.
+
+**Extensibility within v2 — per-entry `dtype`.** New weight encodings are
+added as new `dtype` values rather than a header version bump. Dispatch
+is per-entry and the reader's `else` branch raises loudly on an unknown
+`dtype`, so an old reader fails explicitly on exactly the entries it
+cannot decode while reading all known-dtype files unchanged. `ternary_g128`
+(§4.1b, added 2026-06) is the first such additive extension — existing
+`ternary2` / `int4_block32` / `float16` artefacts are untouched and need
+no migration. Reserve a version bump (v3) for changes to the 256-byte
+header or section layout.
 
 ## 10. Limitations (v2)
 
