@@ -27,6 +27,7 @@ from coremltools.converters.mil.mil import Builder as mb, types
 
 from terncore.tern_model import TernModelReader
 from terncore.sparse import unpack_ternary_weights
+from terncore.arch_presets import RopeConfig
 from terncore.coreml_export_helpers import (
     _validate_ternary2_alpha,
     _cast_fp16_retain_with_guards,
@@ -171,6 +172,48 @@ ARCH_PRESETS = {
         "num_layers": 48,
         "tie_word_embeddings": False,
     },
+    # Dense Qwen3 (PrismML Ternary Bonsai). QK-Norm + YaRN RoPE.
+    # rope_scaling drives the YaRN frequency path (see rope_cos_sin);
+    # has_qk_norm activates the per-head q_norm/k_norm RMSNorm already
+    # present in the block builder.
+    "qwen3-bonsai-1.7b": {
+        "hidden_size": 2048,
+        "intermediate_size": 6144,
+        "num_heads": 16,
+        "num_kv_heads": 8,
+        "head_dim": 128,
+        "rms_norm_eps": 1e-6,
+        "rope_theta": 1000000.0,
+        "vocab_size": 151669,
+        "num_layers": 28,
+        "tie_word_embeddings": True,
+        "has_qk_norm": True,
+        "max_position_embeddings": 32768,
+        "rope_scaling": {
+            "rope_type": "yarn",
+            "factor": 4.0,
+            "original_max_position_embeddings": 8192,
+        },
+    },
+    "qwen3-bonsai-8b": {
+        "hidden_size": 4096,
+        "intermediate_size": 12288,
+        "num_heads": 32,
+        "num_kv_heads": 8,
+        "head_dim": 128,
+        "rms_norm_eps": 1e-6,
+        "rope_theta": 1000000.0,
+        "vocab_size": 151669,
+        "num_layers": 36,
+        "tie_word_embeddings": False,
+        "has_qk_norm": True,
+        "max_position_embeddings": 65536,
+        "rope_scaling": {
+            "rope_type": "yarn",
+            "factor": 4.0,
+            "original_max_position_embeddings": 16384,
+        },
+    },
 }
 
 
@@ -306,6 +349,126 @@ def _precompute_rope_freqs(seq_len, head_dim=HEAD_DIM, theta=ROPE_THETA):
     cos_table = np.cos(freqs_outer).astype(np.float16)
     sin_table = np.sin(freqs_outer).astype(np.float16)
     return cos_table, sin_table  # [seq_len, head_dim/2]
+
+
+def _yarn_rope_freqs(
+    seq_len,
+    head_dim,
+    theta,
+    factor,
+    original_max_position_embeddings,
+    beta_fast=32.0,
+    beta_slow=1.0,
+    attention_factor=None,
+    truncate=True,
+):
+    """Precompute YaRN-scaled cos/sin RoPE tables.
+
+    Mirrors HuggingFace ``transformers.modeling_rope_utils.
+    _compute_yarn_parameters`` (the ``rope_type: "yarn"`` initialiser
+    Qwen3 uses) exactly: an NTK-by-parts blend of extrapolated and
+    interpolated inverse frequencies, with the per-band linear ramp,
+    and the mscale attention factor folded into the returned tables so
+    the cos/sin are emit-ready (matching ``Qwen3RotaryEmbedding``,
+    which multiplies cos/sin by ``attention_scaling``).
+
+    The returned tables have the same ``[seq_len, head_dim/2]`` shape and
+    FP16 dtype as :func:`_precompute_rope_freqs`, so the block builder
+    consumes them through the identical RoPE application path.
+
+    Args:
+        seq_len: Sequence length to tabulate positions for.
+        head_dim: Attention head dimension (full rotary, partial=1.0).
+        theta: RoPE base frequency (``rope_theta``).
+        factor: YaRN interpolation factor (context-extension ratio).
+        original_max_position_embeddings: Pretraining context window —
+            the reference length the correction range is computed against.
+        beta_fast: Extrapolation boundary (paper default 32).
+        beta_slow: Interpolation boundary (paper default 1).
+        attention_factor: Explicit mscale override; when ``None`` it is
+            inferred from ``factor`` per the paper.
+        truncate: Floor/ceil the correction range (HF default True).
+
+    Returns:
+        ``(cos_table, sin_table)`` each ``[seq_len, head_dim/2]`` FP16.
+    """
+    dim = head_dim  # partial_rotary_factor == 1.0 for Qwen3
+    base = float(theta)
+
+    def get_mscale(scale, mscale=1.0):
+        if scale <= 1:
+            return 1.0
+        return 0.1 * mscale * math.log(scale) + 1.0
+
+    if attention_factor is None:
+        attention_factor = get_mscale(factor)
+
+    def find_correction_dim(num_rotations, dim, base, max_pos):
+        return (dim * math.log(max_pos / (num_rotations * 2 * math.pi))) / (
+            2 * math.log(base)
+        )
+
+    def find_correction_range(low_rot, high_rot, dim, base, max_pos, truncate):
+        low = find_correction_dim(low_rot, dim, base, max_pos)
+        high = find_correction_dim(high_rot, dim, base, max_pos)
+        if truncate:
+            low = math.floor(low)
+            high = math.ceil(high)
+        return max(low, 0), min(high, dim - 1)
+
+    def linear_ramp_factor(mn, mx, n):
+        if mn == mx:
+            mx += 0.001  # guard against singularity
+        linear_func = (np.arange(n, dtype=np.float32) - mn) / (mx - mn)
+        return np.clip(linear_func, 0.0, 1.0)
+
+    pos_freqs = base ** (np.arange(0, dim, 2, dtype=np.float32) / dim)
+    inv_freq_extrapolation = 1.0 / pos_freqs
+    inv_freq_interpolation = 1.0 / (factor * pos_freqs)
+
+    low, high = find_correction_range(
+        beta_fast, beta_slow, dim, base,
+        original_max_position_embeddings, truncate,
+    )
+    # 1 = extrapolate (vanilla), 0 = interpolate (scaled), ramped per band.
+    inv_freq_extrapolation_factor = 1.0 - linear_ramp_factor(low, high, dim // 2)
+    inv_freq = (
+        inv_freq_interpolation * (1.0 - inv_freq_extrapolation_factor)
+        + inv_freq_extrapolation * inv_freq_extrapolation_factor
+    )
+
+    t = np.arange(seq_len, dtype=np.float32)
+    freqs_outer = np.outer(t, inv_freq)  # [seq_len, head_dim/2]
+    cos_table = (np.cos(freqs_outer) * attention_factor).astype(np.float16)
+    sin_table = (np.sin(freqs_outer) * attention_factor).astype(np.float16)
+    return cos_table, sin_table  # [seq_len, head_dim/2]
+
+
+def rope_cos_sin(seq_len, head_dim, rope: RopeConfig):
+    """Resolve cos/sin RoPE tables for a :class:`RopeConfig`.
+
+    The single entry point the block builder uses: a YaRN config emits
+    YaRN-scaled tables, every other config emits vanilla RoPE. The
+    Llama path (no ``rope_scaling``) flows through the unchanged
+    :func:`_precompute_rope_freqs`, so its tables are bit-identical to
+    before this op landed.
+    """
+    if rope.is_yarn:
+        if rope.factor is None or rope.original_max_position_embeddings is None:
+            raise ValueError(
+                "YaRN rope config requires both 'factor' and "
+                "'original_max_position_embeddings'."
+            )
+        return _yarn_rope_freqs(
+            seq_len,
+            head_dim,
+            theta=rope.theta,
+            factor=rope.factor,
+            original_max_position_embeddings=(
+                rope.original_max_position_embeddings
+            ),
+        )
+    return _precompute_rope_freqs(seq_len, head_dim=head_dim, theta=rope.theta)
 
 
 def _apply_rope(q, k, cos_table, sin_table):
@@ -445,10 +608,13 @@ def build_llama_coreml(
               f"Hidden: {hidden_size}, Heads: {num_heads}/{num_kv_heads}, "
               f"Head dim: {head_dim}", flush=True)
 
-    # Precompute RoPE tables
-    cos_table, sin_table = _precompute_rope_freqs(
-        seq_len, head_dim=head_dim, theta=rope_theta
+    # Precompute RoPE tables. The RopeConfig carries theta plus any
+    # rope_scaling (YaRN for Qwen3); rope_cos_sin dispatches on
+    # rope.is_yarn and leaves the vanilla Llama path untouched.
+    rope = RopeConfig.from_config(
+        {"rope_theta": rope_theta, "rope_scaling": cfg.get("rope_scaling")}
     )
+    cos_table, sin_table = rope_cos_sin(seq_len, head_dim, rope)
     cos_np = cos_table.reshape(1, 1, seq_len, head_dim // 2)
     sin_np = sin_table.reshape(1, 1, seq_len, head_dim // 2)
 
@@ -491,7 +657,9 @@ def build_llama_coreml(
         k = mb.transpose(x=k, perm=[0, 2, 1, 3])
         v = mb.reshape(x=v, shape=[1, -1, _nkv, _hdim])
         v = mb.transpose(x=v, perm=[0, 2, 1, 3])
-        # QK norm (Gemma 3): RMSNorm on Q and K per-head before RoPE
+        # QK norm (Gemma 3 / Qwen3): per-head RMSNorm on Q and K before
+        # RoPE. _rms_norm_cfg is plain-weight (x_normed * weight), which
+        # matches Qwen3's q_norm/k_norm convention exactly.
         if q_norm_w is not None:
             q = _rms_norm_cfg(q, q_norm_w)
         if k_norm_w is not None:
@@ -565,7 +733,7 @@ def build_llama_coreml(
                 up_w = _inject_weight(reader, f"{prefix}.mlp.up_proj.weight")
             down_w = _inject_weight(reader, f"{prefix}.mlp.down_proj.weight")
 
-            # Optional QK norm (Gemma 3)
+            # Optional QK norm (Gemma 3 / Qwen3)
             q_norm_w = None
             k_norm_w = None
             if has_qk_norm:
