@@ -297,7 +297,7 @@ def _load_weight_for_coreml(reader: TernModelReader, name: str):
 
         scale_shape = entry["scale_shape"]  # [out, num_groups]
         scales = np.frombuffer(scales_bytes, dtype=np.float16).reshape(scale_shape)
-        _validate_group_scales(scales, name)
+        scales = _validate_group_scales(scales, name)
 
         packed_tensor = torch.frombuffer(bytearray(packed_bytes), dtype=torch.uint8)
         ternary = unpack_ternary_weights(packed_tensor, torch.Size(shape)).numpy()

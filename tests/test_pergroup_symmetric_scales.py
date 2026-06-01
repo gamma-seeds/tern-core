@@ -204,3 +204,26 @@ def test_validate_group_scales_nonfinite_raises():
     scales = np.array([[0.04, 0.03], [np.inf, 0.05]], dtype=np.float32)
     with pytest.raises(ValueError, match="Non-finite"):
         _validate_group_scales(scales, "naninf.layer")
+
+
+def test_validate_group_scales_subnormal_band_clamped():
+    """FP16-subnormal scales clamp up to smallest-normal (ANE flush risk)."""
+    min_normal = np.finfo(np.float16).tiny  # 6.104e-05
+    # 5.746e-05 is the real Bonsai-8B offender (gate_proj, layer 1); sign-preserved.
+    scales = np.array([[0.04, 5.746e-05], [-5.0e-05, 0.05]], dtype=np.float16)
+    out = _validate_group_scales(scales, "bonsai.gate_proj")
+    # Sub-normal entries pulled up to ±min_normal; normal entries untouched.
+    assert out[0, 1] == np.float16(min_normal)
+    assert out[1, 0] == np.float16(-min_normal)
+    assert out[0, 0] == np.float16(0.04)
+    assert out[1, 1] == np.float16(0.05)
+    # No subnormal magnitudes remain below the FP16 normal floor.
+    nz = np.abs(out)[np.abs(out) > 0]
+    assert (nz >= np.float16(min_normal)).all()
+
+
+def test_validate_group_scales_below_subnormal_raises():
+    """A scale below the FP16 smallest-subnormal is unrepresentable → reject."""
+    scales = np.array([[0.04, 1e-9], [0.02, 0.05]], dtype=np.float32)
+    with pytest.raises(ValueError, match="group index"):
+        _validate_group_scales(scales, "underflow.layer")
