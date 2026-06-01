@@ -28,6 +28,10 @@ import pytest
 
 torch = pytest.importorskip("torch")
 pytest.importorskip("transformers")
+# terncore.coreml_export (imported below) pulls coremltools at module load;
+# skip the whole module where coremltools is absent (e.g. CI installs
+# .[dev,transformers] only) rather than failing collection.
+pytest.importorskip("coremltools")
 
 from transformers import Qwen3Config  # noqa: E402
 from transformers.models.qwen3.modeling_qwen3 import (  # noqa: E402
