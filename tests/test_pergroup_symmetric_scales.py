@@ -121,6 +121,7 @@ def test_equivalence_gate_rejects_non_ternary():
 
 # ── 4. CoreML emitter: ternary_g128 → valid MIL @ block_size=128 ──────
 def test_coreml_emitter_block_size_128(tmp_path):
+    pytest.importorskip("coremltools")  # skip where coremltools is absent (CI)
     import coremltools as ct
     from coremltools.converters.mil.mil import Builder as mb, types
     from terncore.coreml_export import _load_weight_for_coreml, _inject_weight
