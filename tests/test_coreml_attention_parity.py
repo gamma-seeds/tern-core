@@ -144,3 +144,83 @@ def test_coreml_attention_parity_vs_hf():
     cos_sim = float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))
     assert cos_sim > 0.9999, f"cos={cos_sim} (GQA pairing regressed?)"
     assert np.abs(a - b).max() < 1e-3
+
+
+def test_coreml_attention_parity_vs_real_hf_module():
+    """Export path's _repeat_kv vs a *real* HF LlamaAttention module (eager).
+
+    The most literal form of the gate: a genuine `nn.Module` from transformers is
+    the gold, so the whole attention assembly (GQA pairing, RoPE, scaling, causal
+    softmax) is checked against HF — at the decoder-attention level, never the
+    full-vocab gather (the Route-A exit-139 surface).
+    """
+    ct = pytest.importorskip("coremltools")
+    from coremltools.converters.mil.mil import Builder as mb, types
+    from terncore.coreml_export import _repeat_kv
+    from transformers import LlamaConfig
+    from transformers.models.llama.modeling_llama import (
+        LlamaAttention, LlamaRotaryEmbedding)
+
+    H, n_q, n_kv, d, S = 64, 8, 2, 8, 6
+    cfg = LlamaConfig(hidden_size=H, num_attention_heads=n_q,
+                      num_key_value_heads=n_kv, head_dim=d, num_hidden_layers=1,
+                      max_position_embeddings=64, rope_theta=10000.0,
+                      attention_bias=False)
+    cfg._attn_implementation = "eager"
+    torch.manual_seed(0)
+    attn = LlamaAttention(cfg, layer_idx=0).to(torch.float32).eval()
+    x = torch.randn(1, S, H)
+    rot = LlamaRotaryEmbedding(cfg)
+    pos = torch.arange(S)[None]
+    cos, sin = rot(x, pos)                                   # [1,S,d]
+    cmask = torch.zeros(S, S); cmask[torch.triu(torch.ones(S, S), 1).bool()] = float("-inf")
+    with torch.no_grad():
+        ref = attn(hidden_states=x, position_embeddings=(cos, sin),
+                   attention_mask=cmask[None, None], past_key_values=None)[0].numpy()
+
+    sd = attn.state_dict()
+    qw = sd["q_proj.weight"].numpy(); kw = sd["k_proj.weight"].numpy()
+    vw = sd["v_proj.weight"].numpy(); ow = sd["o_proj.weight"].numpy()
+    cos_np = cos[0, :, :d // 2].numpy(); sin_np = sin[0, :, :d // 2].numpy()
+    mask = np.triu(np.full((S, S), -np.inf, np.float32), 1)
+    scale = 1.0 / math.sqrt(d)
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=(1, S, H), dtype=types.fp32)],
+                opset_version=ct.target.iOS18)
+    def prog(hidden):
+        cv = mb.const(val=cos_np.reshape(1, 1, S, d // 2))
+        sv = mb.const(val=sin_np.reshape(1, 1, S, d // 2))
+
+        def rope(t):
+            t1 = mb.slice_by_index(x=t, begin=[0, 0, 0, 0], end=[0, 0, 0, d // 2],
+                                   end_mask=[True, True, True, False])
+            t2 = mb.slice_by_index(x=t, begin=[0, 0, 0, d // 2], end=[0, 0, 0, 0],
+                                   end_mask=[True, True, True, True])
+            r1 = mb.sub(x=mb.mul(x=t1, y=cv), y=mb.mul(x=t2, y=sv))
+            r2 = mb.add(x=mb.mul(x=t2, y=cv), y=mb.mul(x=t1, y=sv))
+            return mb.concat(values=[r1, r2], axis=-1)
+
+        q = mb.transpose(x=mb.reshape(x=mb.linear(x=hidden, weight=mb.const(val=qw)),
+                                      shape=[1, S, n_q, d]), perm=[0, 2, 1, 3])
+        k = mb.transpose(x=mb.reshape(x=mb.linear(x=hidden, weight=mb.const(val=kw)),
+                                      shape=[1, S, n_kv, d]), perm=[0, 2, 1, 3])
+        v = mb.transpose(x=mb.reshape(x=mb.linear(x=hidden, weight=mb.const(val=vw)),
+                                      shape=[1, S, n_kv, d]), perm=[0, 2, 1, 3])
+        q, k = rope(q), rope(k)
+        k = _repeat_kv(k, n_kv, n_q // n_kv, d)
+        v = _repeat_kv(v, n_kv, n_q // n_kv, d)
+        a = mb.matmul(x=q, y=mb.transpose(x=k, perm=[0, 1, 3, 2]))
+        a = mb.add(x=mb.mul(x=a, y=np.float32(scale)), y=mb.const(val=mask.reshape(1, 1, S, S)))
+        a = mb.softmax(x=a, axis=-1)
+        o = mb.reshape(x=mb.transpose(x=mb.matmul(x=a, y=v), perm=[0, 2, 1, 3]),
+                       shape=[1, S, n_q * d])
+        return mb.linear(x=o, weight=mb.const(val=ow), name="out")
+
+    m = ct.convert(prog, source="milinternal", convert_to="mlprogram",
+                   minimum_deployment_target=ct.target.iOS18,
+                   compute_precision=ct.precision.FLOAT32,
+                   compute_units=ct.ComputeUnit.CPU_ONLY)
+    got = np.asarray(list(m.predict({"hidden": x.numpy()}).values())[0]).ravel()
+    a, b = ref.ravel().astype(np.float64), got.astype(np.float64)
+    cos_sim = float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b)))
+    assert cos_sim > 0.99999, f"cos={cos_sim} vs real HF LlamaAttention"
