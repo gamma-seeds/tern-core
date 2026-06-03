@@ -112,7 +112,7 @@ def export_gemma4_coreml(
         compute_units=ct.ComputeUnit.ALL,
     )
 
-    del traced
+    del exported
     gc.collect()
 
     # ── Save ──
