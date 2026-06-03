@@ -18,9 +18,12 @@ from terncore.moe.expert_bank import (
     PackedTernaryExpertBank,
     load_moe_packed,
 )
+from terncore.moe.runnable import TernaryMoEBlock, build_runnable_qwen3_moe
 
 __all__ = [
     "PackedTernaryExpertBank",
     "MoEPackedModel",
     "load_moe_packed",
+    "TernaryMoEBlock",
+    "build_runnable_qwen3_moe",
 ]
