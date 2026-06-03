@@ -183,6 +183,25 @@ def test_matches_dense_ternary_reference(packed_tiny):
     )
 
 
+def test_runnable_attaches_lifecycle_all_sure(packed_tiny):
+    """build_runnable attaches a SURE-only lifecycle beside the bank; the
+    prepare-phase no-op leaves the forward output unchanged."""
+    from terncore.moe import ConfidenceState
+
+    config, reader = packed_tiny
+    model = build_runnable_qwen3_moe(load_moe_packed(reader, spot_check_n=0), config)
+    lc = model._expert_lifecycle
+    assert lc is not None
+    s = lc.summary()
+    assert s["resident_experts"] == config.num_hidden_layers * config.num_experts
+    assert s["states"]["UNSURE"] == 0 and s["states"]["UNKNOWN"] == 0
+    assert lc.state(0, 0) is ConfidenceState.SURE
+    # Forward still produces finite logits with the prepare no-op in the loop.
+    ids = torch.randint(0, config.vocab_size, (1, 5))
+    with torch.no_grad():
+        assert torch.isfinite(model(ids).logits).all()
+
+
 def test_greedy_generate_runs(packed_tiny):
     config, reader = packed_tiny
     model = build_runnable_qwen3_moe(load_moe_packed(reader, spot_check_n=0), config)

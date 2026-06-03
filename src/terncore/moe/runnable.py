@@ -39,6 +39,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from terncore.moe.expert_bank import MoEPackedModel, PackedTernaryExpertBank
+from terncore.moe.lifecycle import ExpertLifecycle
 
 _ATTN_PROJ = ("q", "k", "v", "o")
 
@@ -62,10 +63,13 @@ class TernaryMoEBlock(nn.Module):
         top_k: int,
         norm_topk_prob: bool,
         hidden_act: str,
+        lifecycle: "ExpertLifecycle | None" = None,
     ) -> None:
         super().__init__()
         # Tuple wrapper: shared bank reference, deliberately unregistered.
         self._bank_ref = (bank,)
+        # Lifecycle (plain object) is not an nn.Module → not registered.
+        self._lifecycle = lifecycle
         self.layer_idx = int(layer_idx)
         self.num_experts = int(num_experts)
         self.top_k = int(top_k)
@@ -110,7 +114,11 @@ class TernaryMoEBlock(nn.Module):
             e = int(e[0])
             slot, token_idx = torch.where(expert_mask[e])
             cur = x[token_idx]  # [M, H]
-            # P146 "prepare": resident bank lookup (SURE in Milestone 1).
+            # P146 "prepare": ensure the expert is resident. In Milestone 1
+            # this is a SURE no-op; Milestone 2's lifecycle pages it in.
+            if self._lifecycle is not None:
+                self._lifecycle.prepare(self.layer_idx, e)
+            # P146 "launch": resident bank lookup + ternary packed matmul.
             gate = bank.get(self.layer_idx, e, "gate")
             up = bank.get(self.layer_idx, e, "up")
             down = bank.get(self.layer_idx, e, "down")
@@ -161,6 +169,9 @@ def build_runnable_qwen3_moe(
     bank = packed.bank
     protected = packed.protected
     attention = packed.attention
+    # Stage 4: lifecycle beside the bank. M1 holds every expert SURE; its
+    # prepare-phase is a no-op the blocks call before dispatch.
+    lifecycle = ExpertLifecycle(bank)
 
     def prot(name: str) -> torch.Tensor:
         return protected[name].to(dtype)
@@ -184,6 +195,7 @@ def build_runnable_qwen3_moe(
                 top_k=config.num_experts_per_tok,
                 norm_topk_prob=config.norm_topk_prob,
                 hidden_act=config.hidden_act,
+                lifecycle=lifecycle,
             )
         else:  # dense Qwen3MoeMLP layer (none in Qwen3-30B-A3B, but be safe)
             for proj in ("gate", "up", "down"):
@@ -214,6 +226,9 @@ def build_runnable_qwen3_moe(
 
     # Register the shared bank once so model.to(device) moves it.
     model._ternary_expert_bank = bank
+    # Lifecycle is a plain object (not an nn.Module) → attached for queryability
+    # (model._expert_lifecycle.state(layer, expert)) without re-registering bank.
+    model._expert_lifecycle = lifecycle
 
     # Move non-meta state to the target device/dtype. Attention packed
     # modules carry uint8 buffers (dtype-agnostic); protected/router are
