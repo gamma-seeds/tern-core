@@ -17,9 +17,9 @@ fix scope. Closed items move to a "Closed" section at the bottom.
 1. **Threshold sweep (0.5 / 0.55 / 0.6 / 0.7) on Qwen3-30B-A3B all collapse to single-token repetition.** Every threshold sits below the coherent-generation envelope under pure ternary quantisation; the cliff is below 0.5. Evidence: `/Volumes/Syn Archive/models/compressed/qwen3-30b-a3b/sweep/threshold_coherence_results.json`. Driver: `benchmarks/sweep_qwen3_threshold_coherence_2026-05-28.py`.
 
 2. **Per-tensor sensitivity scan (Qwen3 + Gemma-4-26B-A4B reference) confirms a smeared distribution.** Std ~0.01, errors clustered at relative_error ~0.45 across 18,624 Qwen3 layers and 7,885 Gemma-4 layers; no concentrated tail (Qwen3: 13 layers ≥0.54, 0 ≥0.60; Gemma-4: 5 layers ≥0.54, 0 ≥0.60). Per-layer INT4 routing is the wrong lever against a smeared distribution. Evidence:
-   - `benchmarks/sensitivity_scan_qwen3-30b-a3b_2026-05-28.json`
-   - `benchmarks/sensitivity_scan_gemma4-26b-a4b_2026-05-28.json`
-   - Driver: `benchmarks/sensitivity_scan_moe_2026-05-28.py`
+   - `/Volumes/Syn Archive/models/compressed/qwen3-30b-a3b/sensitivity/sensitivity_scan_qwen3-30b-a3b_2026-05-28.json` (raw dump on archive; excluded from VCS for size — 149,221 lines)
+   - `/Volumes/Syn Archive/models/compressed/gemma4-26b-a4b/sensitivity/sensitivity_scan_gemma4-26b-a4b_2026-05-28.json` (raw dump on archive; excluded from VCS for size — 63,317 lines)
+   - Driver: `benchmarks/sensitivity_scan_moe_2026-05-28.py` (regenerates both dumps)
 
 3. **Gemma-4-26B-A4B / Gemopus-4-26B-A4B carry the same exposure.** Their per-layer error distribution is nearly identical to Qwen3's; their `fidelity_pass: True` measures only ternary-layer count (`assert_configurational_fidelity` asserts `expected ± 65`), never reconstruction or generation quality. Their generation coherence has never been measured.
 
@@ -31,7 +31,7 @@ fix scope. Closed items move to a "Closed" section at the bottom.
    - Qwen3: mean 0.4477 → 0.5329 (+0.085); max 0.600 → 0.694; layers ≥0.54 went from 13 → 1620.
    - Gemma-4-26B-A4B: mean 0.4536 → 0.5348 (+0.081); max 0.567 → 0.627; layers ≥0.54 went from 5 → 1038.
    - Stdev tightens slightly (~0.0075) — i.e. uniformly worse. Per-channel α buys no headroom here.
-   - Evidence: `benchmarks/sensitivity_scan_qwen3-30b-a3b_per_channel_2026-05-28.json`, `benchmarks/sensitivity_scan_gemma4-26b-a4b_per_channel_2026-05-28.json`.
+   - Evidence (raw per-channel dumps on archive; excluded from VCS for size; regenerable via `benchmarks/sensitivity_scan_moe_2026-05-28.py`): `/Volumes/Syn Archive/models/compressed/qwen3-30b-a3b/sensitivity/sensitivity_scan_qwen3-30b-a3b_per_channel_2026-05-28.json` (223,720 lines), `/Volumes/Syn Archive/models/compressed/gemma4-26b-a4b/sensitivity/sensitivity_scan_gemma4-26b-a4b_per_channel_2026-05-28.json` (94,860 lines).
 
 6. **Dense reference (Phi-4-14B) shows the same smeared shape.** Per-tensor scan on Phi-4: mean 0.5447, p99 0.6304, max 0.6576; 53 of 160 layers ≥0.54, 6 ≥0.60. Tightly clustered, same structural pattern as the MoE models. Attention is uniformly the worst category across all three architectures (Phi-4 attn mean 0.559 vs MLP 0.531; Qwen3 attn 0.494 vs expert 0.447; Gemma-4 attn 0.495 vs other 0.453). Phi-4 ternary @0.7 collapse (already documented) sits in the same numerical neighbourhood, confirming the smeared pattern is a general property of ternary @0.7 on transformer architectures, **not** Qwen3-specific or MoE-specific. Evidence: `benchmarks/sensitivity_scan_phi-4_2026-05-28.json`.
 
