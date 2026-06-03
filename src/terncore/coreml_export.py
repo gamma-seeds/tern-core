@@ -106,6 +106,7 @@ ARCH_PRESETS = {
         "has_qk_norm": True,
         "has_pre_ffn_norm": True,
         "has_post_ffn_norm": True,
+        "scale_embeddings": True,
     },
     "gemma3-12b": {
         "hidden_size": 3840,
@@ -122,6 +123,7 @@ ARCH_PRESETS = {
         "has_qk_norm": True,
         "has_pre_ffn_norm": True,
         "has_post_ffn_norm": True,
+        "scale_embeddings": True,
     },
     "phi4-14b": {
         "hidden_size": 5120,
@@ -549,10 +551,10 @@ def _gqa_attention(hidden, q_w, k_w, v_w, o_w, cos_table, sin_table):
     # Apply RoPE
     q, k = _apply_rope(q, k, cos_table, sin_table)
 
-    # GQA: expand K, V from 8 heads to 64 heads by repeating
-    # k: [1, 8, seq, 128] → [1, 64, seq, 128]
-    k = mb.tile(x=k, reps=[1, GQA_GROUPS, 1, 1])
-    v = mb.tile(x=v, reps=[1, GQA_GROUPS, 1, 1])
+    # GQA: expand K, V from 8 heads to 64 heads via interleaving repeat_kv
+    # (each KV head repeated consecutively — matches HF, not block-tile).
+    k = _repeat_kv(k, NUM_KV_HEADS, GQA_GROUPS, HEAD_DIM)
+    v = _repeat_kv(v, NUM_KV_HEADS, GQA_GROUPS, HEAD_DIM)
 
     # Attention: Q @ K^T / sqrt(head_dim)
     scale = mb.const(val=np.float16(1.0 / math.sqrt(HEAD_DIM)))
@@ -582,6 +584,24 @@ def _mlp(hidden, gate_w, up_w, down_w):
     up = mb.linear(x=hidden, weight=up_w)
     activated = mb.mul(x=mb.silu(x=gate), y=up)
     return mb.linear(x=activated, weight=down_w)
+
+
+def _repeat_kv(x, n_kv, n_rep, head_dim):
+    """Grouped-query KV expansion matching HF ``repeat_kv``: each KV head is
+    repeated ``n_rep`` times *consecutively* ([kv0×n_rep, kv1×n_rep, …]), so
+    query head h pairs with KV head ``h // n_rep`` — the trained convention.
+
+    Replaces the previous ``mb.tile(x=x, reps=[1, n_rep, 1, 1])``, which
+    *block-repeated* the head axis ([kv0, kv1, …, kv0, kv1, …]) and therefore
+    paired query head h with KV head ``h % n_kv`` — wrong for every nkv>1 GQA
+    model, silently scrambling attention output. ``-1`` carries the symbolic
+    sequence dim through both reshapes (one ``-1`` each).
+
+    x: [1, n_kv, seq, head_dim] -> [1, n_kv*n_rep, seq, head_dim]
+    """
+    x = mb.reshape(x=x, shape=[1, n_kv, 1, -1, head_dim])
+    x = mb.tile(x=x, reps=[1, 1, n_rep, 1, 1])
+    return mb.reshape(x=x, shape=[1, n_kv * n_rep, -1, head_dim])
 
 
 # ---------------------------------------------------------------------------
@@ -626,6 +646,11 @@ def build_llama_coreml(
     has_post_ffn_norm = cfg.get("has_post_ffn_norm", False)
     fused_qkv = cfg.get("fused_qkv", False)
     fused_gate_up = cfg.get("fused_gate_up", False)
+    # Gemma: embeddings are scaled by sqrt(hidden_size) (ScaledWordEmbedding),
+    # and logits may be soft-capped (logits = cap * tanh(logits / cap)). Both
+    # are model-level and absent from the original Llama scaffold.
+    embed_scale = math.sqrt(hidden_size) if cfg.get("scale_embeddings") else None
+    final_logit_softcap = cfg.get("final_logit_softcap")
 
     t0 = time.time()
     reader = TernModelReader(tern_model_path)
@@ -647,6 +672,11 @@ def build_llama_coreml(
     cos_table, sin_table = rope_cos_sin(seq_len, head_dim, rope)
     cos_np = cos_table.reshape(1, 1, seq_len, head_dim // 2)
     sin_np = sin_table.reshape(1, 1, seq_len, head_dim // 2)
+
+    # Causal additive mask [1,1,seq,seq] — finite large-negative sentinel
+    # (fp16-safe; avoids -inf→NaN on a fully-masked row). Applied in attention.
+    _causal_np = np.zeros((1, 1, seq_len, seq_len), dtype=np.float16)
+    _causal_np[0, 0][np.triu_indices(seq_len, 1)] = np.float16(-1.0e4)
 
     # Capture config in closure for the MIL builder functions
     _hidden = hidden_size
@@ -677,7 +707,7 @@ def build_llama_coreml(
         return _rotate(q, cos_t, sin_t), _rotate(k, cos_t, sin_t)
 
     def _gqa_cfg(hidden, q_w, k_w, v_w, o_w, cos_t, sin_t,
-                 q_norm_w=None, k_norm_w=None):
+                 q_norm_w=None, k_norm_w=None, mask_var=None):
         q = mb.linear(x=hidden, weight=q_w)
         k = mb.linear(x=hidden, weight=k_w)
         v = mb.linear(x=hidden, weight=v_w)
@@ -696,12 +726,18 @@ def build_llama_coreml(
             k = _rms_norm_cfg(k, k_norm_w)
         q, k = _apply_rope_cfg(q, k, cos_t, sin_t)
         if _gqa > 1:
-            k = mb.tile(x=k, reps=[1, _gqa, 1, 1])
-            v = mb.tile(x=v, reps=[1, _gqa, 1, 1])
+            k = _repeat_kv(k, _nkv, _gqa, _hdim)
+            v = _repeat_kv(v, _nkv, _gqa, _hdim)
         scale = mb.const(val=np.float16(1.0 / math.sqrt(_hdim)))
         k_t = mb.transpose(x=k, perm=[0, 1, 3, 2])
         attn = mb.matmul(x=q, y=k_t)
         attn = mb.mul(x=attn, y=scale)
+        # Causal mask (decoder LM). Additive [1,1,seq,seq] with a finite
+        # large-negative sentinel (NOT -inf — a fully-masked row would NaN the
+        # softmax; finite keeps it safe and also zeroes attention to right-pad
+        # positions so the last real token's logits ignore padding).
+        if mask_var is not None:
+            attn = mb.add(x=attn, y=mask_var)
         attn = mb.softmax(x=attn, axis=-1)
         out = mb.matmul(x=attn, y=v)
         out = mb.transpose(x=out, perm=[0, 2, 1, 3])
@@ -713,7 +749,10 @@ def build_llama_coreml(
         gate = mb.linear(x=hidden, weight=gate_w)
         up = mb.linear(x=hidden, weight=up_w)
         if use_gelu:
-            activated = mb.mul(x=mb.gelu(x=gate), y=up)
+            # Gemma uses gelu_pytorch_tanh — the tanh approximation, NOT the
+            # default exact-erf gelu. mb.gelu() defaults to EXACT, which is a
+            # silent mismatch for every gelu-activation (Gemma) model.
+            activated = mb.mul(x=mb.gelu(x=gate, mode="TANH_APPROXIMATION"), y=up)
         else:
             activated = mb.mul(x=mb.silu(x=gate), y=up)
         return mb.linear(x=activated, weight=down_w)
@@ -728,9 +767,12 @@ def build_llama_coreml(
 
         embed_w = _inject_weight(reader, "model.embed_tokens.weight")
         hidden = mb.gather(x=embed_w, indices=input_ids, axis=0)
+        if embed_scale is not None:
+            hidden = mb.mul(x=hidden, y=mb.const(val=np.float16(embed_scale)))
 
         cos_var = mb.const(val=cos_np)
         sin_var = mb.const(val=sin_np)
+        causal_var = mb.const(val=_causal_np)
 
         for i in range(n_blocks):
             if verbose:
@@ -773,7 +815,8 @@ def build_llama_coreml(
             normed = _rms_norm_cfg(hidden, ln1_w)
             attn_out = _gqa_cfg(normed, q_w, k_w, v_w, o_w,
                                 cos_var, sin_var,
-                                q_norm_w=q_norm_w, k_norm_w=k_norm_w)
+                                q_norm_w=q_norm_w, k_norm_w=k_norm_w,
+                                mask_var=causal_var)
             hidden = mb.add(x=hidden, y=attn_out)
 
             # MLP with optional extra norms (Gemma 3)
@@ -800,7 +843,13 @@ def build_llama_coreml(
             lm_head_w = _inject_weight(reader, "model.embed_tokens.weight")
         else:
             lm_head_w = _inject_weight(reader, "lm_head.weight")
-        logits = mb.linear(x=hidden, weight=lm_head_w, name="logits")
+        if final_logit_softcap:
+            logits = mb.linear(x=hidden, weight=lm_head_w)
+            cap = mb.const(val=np.float16(final_logit_softcap))
+            logits = mb.mul(x=mb.tanh(x=mb.real_div(x=logits, y=cap)), y=cap,
+                            name="logits")
+        else:
+            logits = mb.linear(x=hidden, weight=lm_head_w, name="logits")
 
         return logits
 
