@@ -201,38 +201,69 @@ def _extract_kv_pairs(past_key_values):
 class IncrementalTQCompressor:
     """Incrementally compresses KV cache vectors via TurboQuant.
 
-    Initialises rotation and QJL matrices once per layer×head, then
-    encodes only newly-appended vectors on each call to `append`.
+    Detects each layer's ``(n_heads, head_dim)`` from the live KV cache and
+    selects, or lazily creates, a ``TurboQuantConfig`` keyed by that layer's
+    ``head_dim``. A homogeneous model produces exactly one config; a model
+    with per-layer heterogeneous ``head_dim`` — e.g. Gemma 4 E4B, which
+    interleaves sliding-attention layers (``head_dim=256``) with
+    full-attention layers (``head_dim=512``) — gets one config per distinct
+    dim. Rotation and QJL state is built once per layer×head on first
+    encounter of that layer, then only newly-appended vectors are encoded on
+    each call to `append`.
+
+    The ``n_heads`` / ``head_dim`` constructor arguments are accepted as
+    optional hints for backward compatibility; the per-layer geometry is read
+    from the live cache and trusted over them.
     """
 
-    def __init__(self, n_layers: int, n_heads: int, head_dim: int, device="cpu", b_mse: int = 3):
+    def __init__(self, n_layers: int, n_heads: int | None = None,
+                 head_dim: int | None = None, device="cpu", b_mse: int = 3):
         _ensure_turboquant_on_path()
-        from src.cache import TurboQuantConfig
 
         self.n_layers = n_layers
-        self.n_heads = n_heads
         self.b_mse = b_mse
-        self.config = TurboQuantConfig(
-            d=head_dim, b_mse=self.b_mse,
-            device=torch.device(device), mixed_precision=True,
-        )
-        # Pre-build per-layer, per-head rotation + QJL state
-        self.rotations = []
-        self.qjl_matrices = []
-        self.mixed_cfgs = []
-        for l in range(n_layers):
-            r_layer, s_layer, m_layer = [], [], []
-            for h in range(n_heads):
-                r_layer.append(self.config.make_rotation(l, h))
-                s_layer.append(self.config.make_qjl_matrix(l, h))
-                m_layer.append(self.config.get_mixed_config(l, h))
-            self.rotations.append(r_layer)
-            self.qjl_matrices.append(s_layer)
-            self.mixed_cfgs.append(m_layer)
+        self.device = device
+
+        # head_dim -> TurboQuantConfig (collapses E4B's 24 layers -> 2 configs;
+        # a uniform model -> 1, identical to the pre-per-layer behaviour).
+        self._configs: dict = {}
+        # Per-layer state, built lazily on first append() that touches a layer.
+        self._rotations: list = [None] * n_layers
+        self._qjl: list = [None] * n_layers
+        self._mixed: list = [None] * n_layers
+        self._layer_geom: list = [None] * n_layers  # (n_heads, head_dim) or None
 
         # compressed[layer][head] = list of (k_compressed, v_compressed)
-        self.compressed = [[[] for _ in range(n_heads)] for _ in range(n_layers)]
+        self.compressed: list = [None] * n_layers
         self.seq_len = 0  # number of positions already compressed
+
+    def _config_for_dim(self, head_dim: int):
+        from src.cache import TurboQuantConfig
+        cfg = self._configs.get(head_dim)
+        if cfg is None:
+            cfg = TurboQuantConfig(
+                d=head_dim, b_mse=self.b_mse,
+                device=torch.device(self.device), mixed_precision=True,
+            )
+            self._configs[head_dim] = cfg
+        return cfg
+
+    def _ensure_layer(self, l: int, n_heads: int, head_dim: int):
+        geom = self._layer_geom[l]
+        if geom is not None:
+            if geom != (n_heads, head_dim):
+                raise ValueError(
+                    f"layer {l} geometry changed across calls: built for "
+                    f"{geom}, cache now reports {(n_heads, head_dim)}"
+                )
+            return self._configs[head_dim]
+        cfg = self._config_for_dim(head_dim)
+        self._rotations[l] = [cfg.make_rotation(l, h) for h in range(n_heads)]
+        self._qjl[l] = [cfg.make_qjl_matrix(l, h) for h in range(n_heads)]
+        self._mixed[l] = [cfg.get_mixed_config(l, h) for h in range(n_heads)]
+        self._layer_geom[l] = (n_heads, head_dim)
+        self.compressed[l] = [[] for _ in range(n_heads)]
+        return cfg
 
     def append(self, past_key_values, *, encode_from: int | None = None):
         """Encode positions [encode_from:] from the live KV cache.
@@ -251,20 +282,23 @@ class IncrementalTQCompressor:
         for l in range(self.n_layers):
             keys = kv_pairs[l][0]    # (1, n_heads, seq_len, head_dim)
             values = kv_pairs[l][1]
-            for h in range(self.n_heads):
+            n_heads = keys.shape[1]
+            head_dim = keys.shape[3]   # per-layer detection (the Path C fix)
+            cfg = self._ensure_layer(l, n_heads, head_dim)
+            for h in range(n_heads):
                 # Slice only the new positions: (new_tokens, head_dim)
                 k_new = keys[0, h, start:total_seq].float()
                 v_new = values[0, h, start:total_seq].float()
 
-                rotation = self.rotations[l][h]
-                S = self.qjl_matrices[l][h]
-                mixed = self.mixed_cfgs[l][h]
+                rotation = self._rotations[l][h]
+                S = self._qjl[l][h]
+                mixed = self._mixed[l][h]
 
                 k_c = turboquant_encode_internal(
-                    k_new, self.config.codebook, rotation, S, mixed=mixed,
+                    k_new, cfg.codebook, rotation, S, mixed=mixed,
                 )
                 v_c = turboquant_encode_internal(
-                    v_new, self.config.codebook, rotation, S, mixed=mixed,
+                    v_new, cfg.codebook, rotation, S, mixed=mixed,
                 )
                 self.compressed[l][h].append((k_c, v_c))
 
@@ -295,9 +329,19 @@ def make_b_mse_hook(
     hook invocation re-encodes the full past_kv (no incremental cache); cost
     O(L) per call, O(L²) total across an L-token sequence.
 
+    Per-layer head_dim: each layer's ``(n_heads, head_dim)`` is read from the
+    live cache inside the hook, and a ``TurboQuantConfig`` is selected (or
+    lazily created) keyed by that layer's ``head_dim``. A homogeneous model
+    builds exactly one config — byte-identical to the pre-per-layer path — so
+    heterogeneous-head_dim models (Gemma 4 E4B: sliding 256 + full 512) round-
+    trip without the single-config crash. The ``n_heads`` / ``head_dim`` args
+    are retained for signature compatibility and used only as a fallback hint.
+
     Args:
         b_mse: bits-of-MSE quantisation parameter (sweep axis for R12)
-        n_layers, n_heads, head_dim: cache shape (must match the model)
+        n_layers: number of decoder layers (cache length)
+        n_heads, head_dim: per-layer geometry hint; the actual per-layer
+            ``(n_h, hd)`` is observed from the cache and trusted over these
         device: TurboQuant config device ("cpu" or "mps")
 
     Returns:
@@ -311,38 +355,52 @@ def make_b_mse_hook(
         turboquant_decode_single,
     )
 
-    config = TurboQuantConfig(
-        d=head_dim, b_mse=b_mse,
-        device=torch.device(device), mixed_precision=True,
-    )
-    # Pre-build per-(layer, head) rotation + QJL state once at factory time
-    rotations = [
-        [config.make_rotation(l, h) for h in range(n_heads)]
-        for l in range(n_layers)
-    ]
-    qjl_matrices = [
-        [config.make_qjl_matrix(l, h) for h in range(n_heads)]
-        for l in range(n_layers)
-    ]
+    dev = torch.device(device)
+    # head_dim -> TurboQuantConfig (one per distinct dim; homogeneous -> 1).
+    configs: dict = {}
+    # Per-layer rotation/QJL state, built lazily on first sight of the layer.
+    rotations: list = [None] * n_layers
+    qjl_matrices: list = [None] * n_layers
+    layer_geom: list = [None] * n_layers  # (n_heads, head_dim) or None
+
+    def _config_for_dim(d: int):
+        cfg = configs.get(d)
+        if cfg is None:
+            cfg = TurboQuantConfig(
+                d=d, b_mse=b_mse, device=dev, mixed_precision=True,
+            )
+            configs[d] = cfg
+        return cfg
+
+    def _ensure_layer(layer_idx: int, n_h: int, hd: int):
+        geom = layer_geom[layer_idx]
+        if geom is not None:
+            return configs[geom[1]]
+        cfg = _config_for_dim(hd)
+        rotations[layer_idx] = [cfg.make_rotation(layer_idx, h) for h in range(n_h)]
+        qjl_matrices[layer_idx] = [cfg.make_qjl_matrix(layer_idx, h) for h in range(n_h)]
+        layer_geom[layer_idx] = (n_h, hd)
+        return cfg
 
     def hook(past_key_values):
         kv_pairs = _extract_kv_pairs(past_key_values)
         new_past = []
         for layer_idx, (k, v) in enumerate(kv_pairs):
             batch, n_h, seq_len, hd = k.shape
+            cfg = _ensure_layer(layer_idx, n_h, hd)  # per-layer head_dim fix
             new_k = torch.empty_like(k)
             new_v = torch.empty_like(v)
             for head_idx in range(n_h):
                 rotation = rotations[layer_idx][head_idx]
                 S = qjl_matrices[layer_idx][head_idx]
-                k_flat = k[:, head_idx, :, :].reshape(-1, hd).float().to(config.device)
-                v_flat = v[:, head_idx, :, :].reshape(-1, hd).float().to(config.device)
-                mixed = config.get_mixed_config(layer_idx, head_idx, k_flat)
+                k_flat = k[:, head_idx, :, :].reshape(-1, hd).float().to(cfg.device)
+                v_flat = v[:, head_idx, :, :].reshape(-1, hd).float().to(cfg.device)
+                mixed = cfg.get_mixed_config(layer_idx, head_idx, k_flat)
                 k_c = turboquant_encode_internal(
-                    k_flat, config.codebook, rotation, S, mixed=mixed,
+                    k_flat, cfg.codebook, rotation, S, mixed=mixed,
                 )
                 v_c = turboquant_encode_internal(
-                    v_flat, config.codebook, rotation, S, mixed=mixed,
+                    v_flat, cfg.codebook, rotation, S, mixed=mixed,
                 )
                 k_recon = turboquant_decode_single(k_c)[..., :hd].contiguous()
                 v_recon = turboquant_decode_single(v_c)[..., :hd].contiguous()
@@ -547,13 +605,14 @@ def generate_streaming_turboquant(
 
             past_key_values = outputs.past_key_values
 
-            # Lazy-init compressor on first pass (now we know dimensions)
+            # Lazy-init compressor on first pass. Per-layer (n_heads, head_dim)
+            # is detected from the live cache inside append(), so no single
+            # layer-0 head_dim is assumed here — heterogeneous-head_dim models
+            # (e.g. Gemma 4 E4B) are handled per-layer.
             if compressor is None:
                 kv0 = _extract_kv_pairs(past_key_values)
                 compressor = IncrementalTQCompressor(
                     n_layers=len(kv0),
-                    n_heads=kv0[0][0].shape[1],
-                    head_dim=kv0[0][0].shape[3],
                     b_mse=b_mse,
                 )
 
