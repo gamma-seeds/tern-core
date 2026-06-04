@@ -210,6 +210,8 @@ def run_sweep_point(
     model_id: str,
     num_sequences: int,
     seq_len: int,
+    heartbeat_sidecar_path: Optional[Path] = None,
+    heartbeat_token_interval: int = 128,
 ) -> SweepPointResult:
     """Execute one b_mse point: build factory, run PPL eval, classify result."""
     run_id = tern_ppl_bench.utc_now_compact()
@@ -251,6 +253,8 @@ def run_sweep_point(
     try:
         result = tern_ppl_bench.evaluate_ppl_autoregressive(
             model=model, sequences=sequences, kv_cache_hook=hook, device=device,
+            heartbeat_sidecar_path=heartbeat_sidecar_path,
+            heartbeat_token_interval=heartbeat_token_interval,
         )
     except Exception as exc:
         return SweepPointResult(
@@ -520,6 +524,15 @@ def run_sweep(args: argparse.Namespace) -> SweepResult:
         idx = local_idx + point_index_offset
         print(f"\n[r12_sweep] === point {idx} (b_mse={b_mse}) ===", flush=True)
         point_t0 = time.perf_counter()
+        # Heartbeat sidecar path (WS-001 r12 eval-loop instrumentation):
+        # filename mirrors per-point JSON but uses .jsonl extension so the
+        # aggregator's point_*.json glob does not pick it up. Sidecar is
+        # OFF by default; orchestrator passes --enable-heartbeat to opt in.
+        heartbeat_sidecar_path: Optional[Path] = None
+        if getattr(args, "enable_heartbeat", False):
+            heartbeat_sidecar_path = (
+                output_dir / f"point_{idx:02d}_b_mse_{b_mse}_heartbeat.jsonl"
+            )
         point_result = run_sweep_point(
             point_index=idx,
             b_mse=b_mse,
@@ -532,6 +545,8 @@ def run_sweep(args: argparse.Namespace) -> SweepResult:
             model_id=args.model_id,
             num_sequences=args.num_sequences,
             seq_len=args.ar_seq_len,
+            heartbeat_sidecar_path=heartbeat_sidecar_path,
+            heartbeat_token_interval=getattr(args, "heartbeat_token_interval", 128),
         )
 
         # Write per-point JSON immediately (partial-progress preservation)
@@ -656,6 +671,17 @@ def main() -> None:
                              "invocation's grid (default 0). Used by the "
                              "per-point orchestrator so filenames carry the "
                              "correct absolute index across subprocesses.")
+    # WS-001 eval-loop instrumentation (additive 2026-05-18)
+    parser.add_argument("--enable-heartbeat", action="store_true",
+                        help="Emit JSONL heartbeat sidecar per point at "
+                             "<output_dir>/<subdir>/point_NN_b_mse_B_heartbeat.jsonl "
+                             "with fsync per line; survives SIGTRAP. Each "
+                             "heartbeat carries cumulative total_loss + "
+                             "total_scored so partial PPL is reconstructible.")
+    parser.add_argument("--heartbeat-token-interval", type=int, default=128,
+                        help="Emit heartbeat every K inner-loop tokens "
+                             "(default 128). Per-sequence boundaries always "
+                             "emit regardless.")
 
     args = parser.parse_args()
 
