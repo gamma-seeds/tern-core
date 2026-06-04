@@ -35,14 +35,12 @@ src/terncore/csrc/test_sparse_skip
 # Build-time generated headers
 src/terncore/csrc/terncore_version.h
 
-# Benchmark run outputs — regenerable; large raw dumps belong on the archive
-# (/Volumes/Syn Archive/...), not in VCS. Compact evidence (summary_table.md,
-# *_phase2.json, *_dryrun.json, sensitivity_scan_phi-4_*.json) stays tracked.
+# Benchmark scan outputs — regenerable evidence. Durable home is the private
+# gamma-seeds/ecc-ternary release (off-site, access-gated), NOT this public repo:
+# scan outputs carry IP-sensitive findings and must not be world-readable here.
+# Compact evidence (summary_table.md, *_phase2.json, *_dryrun.json) stays tracked.
 results/
 benchmarks/**/per_expert_tolerance_analysis.json
 benchmarks/**/plot_*.png
 benchmarks/tq_bench_results_*.json
-benchmarks/sensitivity_scan_*_per_channel_*.json
-# Oversized per-model sensitivity dumps (archived); phi-4 (small, dense) stays tracked.
-benchmarks/sensitivity_scan_qwen3*.json
-benchmarks/sensitivity_scan_gemma4*.json
+benchmarks/sensitivity_scan_*.json
