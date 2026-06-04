@@ -94,6 +94,12 @@ convention untested until Phase 2.
 
 Original criterion ("All 5 manifests load") was written without M4 Pro 64 GB factored in AND without the per-expert MoE restacking gap surfaced; adjusted to "manifests that fit in 64 GB AND use single-tensor-per-entry naming" framing with documented skip / xfail reasons for the rest. Future hardware (M4 Max, M5, Mac Studio 128+ GB) unblocks the hardware-ceiling cases without code changes; MoE restacking work (banked as separate backlog item, scheduled for L5 sprint week of 2026-05-12) unblocks the gemma4-26b-a4b xfail.
 
+**Salvageable input from closed PR #19 (logged 2026-06-04):** `feat/per-layer-head-dim-tq-compressor-gemma4-row-2026-05-13` (closed superseded+salvaged) carries a `TernModelReader` loader change worth folding into this rewrite, NOT yet on `main`:
+- `_replace_parameter_or_raise()` — replaces a resolved parameter via `setattr(parent, name, nn.Parameter(...))` (preserving `requires_grad`) instead of `.data` assignment, so loads compose with meta-init (`accelerate.init_empty_weights`) where `.data` assignment raises `RuntimeError` on meta-device storage. Directly addresses the "FP16 silent skip" / parameter-path traversal bugs above.
+- Three additive bare-prefix translations in `GEMMA4_MULTIMODAL_TRANSFORMERS_5_5` (`vision_tower.` / `embed_vision.` / `audio_tower.` → `model.<x>.`) for MLX-source artefacts; backward-compatible (already-prefixed manifests pass through unchanged).
+
+Deferred from the PR-#19 salvage deliberately: it is a *behavioural* production-loader change written against May-13 code, and the integration tests that would exercise it are the archive/HF "environmental friction" suite (see Test Infrastructure item) — landing it under the current CI would be green-without-coverage. Fold it into this rewrite's focused PR with the regression test named above, rebased onto current `main`.
+
 ---
 
 ### Known architecture quirk: full_attention v_proj absence (gemma4 26B-A4B)
@@ -286,7 +292,7 @@ TQ bench rows for Gemma 4 E4B (`row_v2_deduped`, 2026-05-12) reported `PPL_basel
 
 ### `tools/tern_tq_bench.py` device hygiene — replace warning-and-fallback with raise-up-front (R14)
 
-**Status:** Open (small hygiene fix; lands on the branch where the bench tool lives)
+**Status:** RESOLVED 2026-06-04. The raise-up-front pattern is in place in the salvaged tool now on `main`: `_assert_device_available()` + `_resolve_device()` validate an explicitly-requested non-CPU backend up front and let any `.to()` failure propagate — no silent CPU fallback. Honours the R9-α provenance invariant.
 **Surfaced:** 2026-05-14 during R9 Phase B prep — grep against the off-branch `tools/tern_tq_bench.py` source (commit `1572e6f` on `feat/per-layer-head-dim-tq-compressor-gemma4-row-2026-05-13`)
 
 The bench tool already accepts `--device {auto|cpu|mps}` and routes through a `_resolve_device(requested)` helper, then loads the HF model without `device_map` and calls `model.to(device)` afterwards. However, lines 596–601 of the off-branch source apply a warning-and-fallback pattern on `.to()` failure:
@@ -329,9 +335,9 @@ Re-execute the TurboQuant bench against `google/gemma-4-E4B-it` under FP16/MPS u
 
 PPL pathology persists (R9.3 collateral — not a blocker for R9-β).
 
-**Blocked on:**
-1. **PR #19 merge to main** — the bench tool (`tools/tern_tq_bench.py`) currently lives only on `feat/per-layer-head-dim-tq-compressor-gemma4-row-2026-05-13`. Once that branch lands on main, the R9 branch (or its successor) can run the bench from a clean main checkout.
-2. **R14 hygiene fix** — the off-branch bench's warning-and-fallback at lines 596–601 must be replaced with a raise-up-front pattern before any `row_v3_mps` produced is provenance-trustworthy under the R9-α invariant.
+**Blocked on:** BOTH CLEARED 2026-06-04 — R9-β is now executable from a clean `main` checkout.
+1. ~~**PR #19 merge to main**~~ — CLEARED. PR #19's per-layer head_dim TQ *methodology* landed via #48 (`tern_infer.py`); the bench tool (`tools/tern_tq_bench.py`) + `tools/tern_kv_shape_probe.py` were salvaged to `main` directly (PR #19 closed as superseded+salvaged). The bench runs from `main`.
+2. ~~**R14 hygiene fix**~~ — CLEARED. The raise-up-front device pattern is in the salvaged tool (see R14 item above).
 
 **Trigger:** Once both blockers clear, execute the bench per the briefing's original Phase B command shape (`/Users/syn/synapticode/venv/bin/python tools/tern_tq_bench.py --model-id google/gemma-4-E4B-it --device mps --dtype float16 --prompt "The future of computing lies in" --max-tokens 100 --b-mse 3 --mixed-precision --threshold 0.7 --no-autoscan --output benchmarks/tq_bench_results_gemma4_e4b_mps_<TIMESTAMP>.json`).
 
