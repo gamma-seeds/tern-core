@@ -526,10 +526,24 @@ def evaluate_ppl_autoregressive(
 # ── Model loading (R7-A §7) ────────────────────────────────────────────
 
 
-def load_fp16_baseline(model_id: str, device: str) -> tuple[Any, Any]:
+def load_fp16_baseline(
+    model_id: str,
+    device: str,
+    tokenizer_source: Optional[str] = None,
+    dtype: "torch.dtype" = torch.float16,
+) -> tuple[Any, Any]:
     """
-    Load FP16 baseline per R7-A §7: ``AutoModelForCausalLM.from_pretrained
-    (model_id, torch_dtype=torch.float16)`` + matching tokenizer.
+    Load FP baseline per R7-A §7: ``AutoModelForCausalLM.from_pretrained
+    (model_id, torch_dtype=dtype)`` + matching tokenizer.
+
+    ``tokenizer_source`` overrides where the tokenizer is loaded from
+    (defaults to ``model_id``). Used when a checkpoint's own tokenizer
+    files are absent from cache but a family-identical tokenizer is
+    available locally (e.g. the shared Gemma 4 tokenizer, vocab 262144).
+
+    ``dtype`` is the compute dtype (default float16 to preserve the
+    Llama-era baseline). Gemma checkpoints need bfloat16 — float16
+    overflows their soft-capping and yields a meaningless PPL.
     """
     try:
         from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -538,10 +552,17 @@ def load_fp16_baseline(model_id: str, device: str) -> tuple[Any, Any]:
             "transformers required: pip install terncore[transformers]"
         ) from e
 
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_source or model_id)
+    # Gemma 4 multimodal checkpoints (E4B encoder-based; 12B Unified) store
+    # the decoder under a ``model.language_model.*`` namespace. AutoModel-
+    # ForCausalLM resolves to the matching *ConditionalGeneration class,
+    # which maps those prefixed keys; forward(input_ids) routes the text
+    # path so WikiText-2 PPL is text-only-correct. (Forcing the text-only
+    # Gemma4ForCausalLM mis-maps the prefix → random weights → PPL blowout;
+    # caught by the R7 envelope check.)
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        torch_dtype=torch.float16,
+        torch_dtype=dtype,
         low_cpu_mem_usage=True,
     )
     model = model.to(device)
@@ -972,6 +993,17 @@ def main() -> None:
         help="Override tokenizer source (default: resolves from model id)",
     )
     parser.add_argument("--device", type=str, default="mps")
+    parser.add_argument(
+        "--dtype",
+        type=str,
+        default="float16",
+        choices=["float16", "bfloat16", "float32"],
+        help=(
+            "FP baseline compute dtype (default float16). Gemma models "
+            "(soft-capping + sqrt-hidden embedding scale) are numerically "
+            "unstable in float16 — use bfloat16 for an honest Gemma baseline."
+        ),
+    )
     parser.add_argument("--seq-len", type=int, default=DEFAULT_SEQ_LEN)
     parser.add_argument("--stride", type=int, default=DEFAULT_STRIDE)
     parser.add_argument(
@@ -1100,11 +1132,17 @@ def main() -> None:
         source_path = str(args.tern_model_path)
         dtype_activation = "mixed"
     else:
-        model, tokenizer = load_fp16_baseline(args.model_id, args.device)
+        baseline_dtype = getattr(torch, args.dtype)
+        model, tokenizer = load_fp16_baseline(
+            args.model_id,
+            args.device,
+            tokenizer_source=args.tokenizer,
+            dtype=baseline_dtype,
+        )
         manifest_sha = None
         model_id = args.model_id
         source_path = args.model_id
-        dtype_activation = "float16"
+        dtype_activation = args.dtype
 
     tokenizer_source = args.tokenizer or model_id
     model_load_seconds = time.perf_counter() - t_load
