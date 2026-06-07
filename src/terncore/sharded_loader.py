@@ -82,16 +82,28 @@ class ShardedWeightIterator:
     def __init__(self, model_dir: str | Path) -> None:
         self.model_dir = Path(model_dir)
         index_path = self.model_dir / "model.safetensors.index.json"
-        if not index_path.exists():
-            raise FileNotFoundError(
-                f"No safetensors index found at {index_path}. "
-                f"Expected a sharded model with model.safetensors.index.json."
-            )
-        with open(index_path) as f:
-            index = json.load(f)
+        if index_path.exists():
+            with open(index_path) as f:
+                index = json.load(f)
+            self.weight_map: dict[str, str] = index["weight_map"]
+            self.total_size: int = index.get("metadata", {}).get("total_size", 0)
+        else:
+            # Single-file (no-index) checkpoint, e.g. Gemma 4 12B-it ships a
+            # lone model.safetensors. Synthesize a weight_map by reading the
+            # file's header keys so the rest of the iterator is unchanged.
+            single_path = self.model_dir / "model.safetensors"
+            if not single_path.exists():
+                raise FileNotFoundError(
+                    f"No safetensors index at {index_path} and no single-file "
+                    f"{single_path}. Expected either a sharded model with "
+                    f"model.safetensors.index.json or a single model.safetensors."
+                )
+            from safetensors import safe_open
 
-        self.weight_map: dict[str, str] = index["weight_map"]
-        self.total_size: int = index.get("metadata", {}).get("total_size", 0)
+            with safe_open(str(single_path), framework="pt", device="cpu") as f:
+                keys = list(f.keys())
+            self.weight_map = {k: "model.safetensors" for k in keys}
+            self.total_size = single_path.stat().st_size
 
         # Pre-compute block grouping
         self._block_weights: dict[int, list[str]] = defaultdict(list)

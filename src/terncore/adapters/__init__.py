@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 _REGISTRY: dict[str, type["ArchitectureAdapter"]] = {}
 
-_KNOWN_ADAPTERS = ["llama", "gemma3", "gemma4", "phi3", "qwen3", "qwen3_moe", "kokoro"]
+_KNOWN_ADAPTERS = ["llama", "gemma3", "gemma4", "gemma4_unified", "phi3", "qwen3", "qwen3_moe", "kokoro"]
 
 
 def register(name: str):
