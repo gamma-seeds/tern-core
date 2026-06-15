@@ -63,6 +63,11 @@ class TernaryQuantizer:
         """
         Quantise weights to ternary.
 
+        Two-pass nearest-value assignment with alternating optimisation:
+        1. Initial threshold pass computes α from non-zero weights.
+        2. Reassign each weight to nearest of {-α, 0, +α} (boundary at α/2).
+        3. Iterate: recompute α from new non-zeros → reassign → until stable.
+
         Args:
             weights: Floating-point weight tensor of any shape.
 
@@ -70,11 +75,10 @@ class TernaryQuantizer:
             ternary: Tensor of same shape with values in {-1, 0, +1}.
             alpha:   Scalar scaling factor (mean absolute value of non-zero entries).
         """
-        # Adaptive threshold based on weight magnitude distribution
         abs_w = torch.abs(weights)
-        delta = self.threshold * torch.mean(abs_w)
 
-        # Ternary assignment: compare-and-assign, no multiplication
+        # Pass 1: threshold-based assignment to bootstrap α
+        delta = self.threshold * torch.mean(abs_w)
         ternary = torch.where(
             weights > delta,
             torch.ones_like(weights),
@@ -84,13 +88,29 @@ class TernaryQuantizer:
                 torch.zeros_like(weights),
             ),
         )
-
-        # Scaling factor: mean absolute value of original weights at non-zero positions
         non_zero_mask = ternary != 0
-        if non_zero_mask.any():
-            alpha = torch.mean(abs_w[non_zero_mask])
-        else:
-            alpha = torch.mean(abs_w)
+        alpha = torch.mean(abs_w[non_zero_mask]) if non_zero_mask.any() else torch.mean(abs_w)
+
+        # Pass 2 + alternating optimisation: nearest-value reassignment
+        for _ in range(5):
+            boundary = alpha / 2.0
+            ternary_new = torch.where(
+                weights > boundary,
+                torch.ones_like(weights),
+                torch.where(
+                    weights < -boundary,
+                    -torch.ones_like(weights),
+                    torch.zeros_like(weights),
+                ),
+            )
+            non_zero_mask = ternary_new != 0
+            alpha_new = torch.mean(abs_w[non_zero_mask]) if non_zero_mask.any() else torch.mean(abs_w)
+            if torch.equal(ternary_new, ternary):
+                ternary = ternary_new
+                alpha = alpha_new
+                break
+            ternary = ternary_new
+            alpha = alpha_new
 
         return ternary, alpha
 

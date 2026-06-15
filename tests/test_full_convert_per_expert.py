@@ -65,7 +65,7 @@ def _write_synthetic_gemma4_model(
         # offset by a distinct mean so per-expert sparsity differs.
         slots = []
         for k in range(num_experts):
-            slot = 0.5 * k + torch.randn(expert_out_dim, expert_in_dim)
+            slot = 1.0 * k + torch.randn(expert_out_dim, expert_in_dim)
             slots.append(slot)
         tensors["model.language_model.layers.0.experts.gate_up_proj"] = (
             torch.stack(slots, dim=0)

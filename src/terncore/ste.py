@@ -59,8 +59,9 @@ class STEQuantize(torch.autograd.Function):
         """
         # Exact same computation as TernaryQuantizer.quantize()
         abs_w = torch.abs(weights)
-        delta = threshold * torch.mean(abs_w)
 
+        # Pass 1: threshold-based assignment to bootstrap α
+        delta = threshold * torch.mean(abs_w)
         ternary = torch.where(
             weights > delta,
             torch.ones_like(weights),
@@ -70,12 +71,29 @@ class STEQuantize(torch.autograd.Function):
                 torch.zeros_like(weights),
             ),
         )
-
         non_zero_mask = ternary != 0
-        if non_zero_mask.any():
-            alpha = torch.mean(abs_w[non_zero_mask])
-        else:
-            alpha = torch.mean(abs_w)
+        alpha = torch.mean(abs_w[non_zero_mask]) if non_zero_mask.any() else torch.mean(abs_w)
+
+        # Pass 2 + alternating optimisation: nearest-value reassignment
+        for _ in range(5):
+            boundary = alpha / 2.0
+            ternary_new = torch.where(
+                weights > boundary,
+                torch.ones_like(weights),
+                torch.where(
+                    weights < -boundary,
+                    -torch.ones_like(weights),
+                    torch.zeros_like(weights),
+                ),
+            )
+            non_zero_mask = ternary_new != 0
+            alpha_new = torch.mean(abs_w[non_zero_mask]) if non_zero_mask.any() else torch.mean(abs_w)
+            if torch.equal(ternary_new, ternary):
+                ternary = ternary_new
+                alpha = alpha_new
+                break
+            ternary = ternary_new
+            alpha = alpha_new
 
         # Save for potential use in backward (not needed for basic STE)
         ctx.save_for_backward(weights)
@@ -222,10 +240,9 @@ class TernaryLinearSTE(nn.Module):
             Float in [0, 1] representing the zero-weight ratio.
         """
         with torch.no_grad():
-            abs_w = torch.abs(self.weight.data)
-            delta = self.threshold * torch.mean(abs_w)
-            zeros = ((self.weight.data >= -delta) & (self.weight.data <= delta)).sum()
-            return zeros.item() / self.weight.numel()
+            q = TernaryQuantizer(threshold=self.threshold)
+            ternary, _ = q.quantize(self.weight.data)
+            return (ternary == 0).sum().item() / self.weight.numel()
 
     def extra_repr(self) -> str:
         """Return string representation for ``print(module)``."""
