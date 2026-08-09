@@ -355,6 +355,40 @@ tern-core adds:
 - **Soft-delete policy**: move Swift and Python source files to `~/synapticode/_trash/` with a `~YYYY-MM-DD_` prefix — keep `rm` off source files.
 - **Branch before editing** benchmark runners — they are primary Apple-brief evidence.
 - **JSON results files** stay append-safe. Rename the original file before re-running; the existing result file is evidence.
+- **Copyright header** for new files: `Copyright (c) 2025-2026 Synapticode. All rights reserved.` Existing files keep their headers until next edit (soft migration from Gamma Seeds Pte Ltd).
+
+---
+
+## Benchmark Infrastructure (BUILD 8)
+
+`benchmarks/MASTER_BOOK.md` and `benchmarks/BUILD_SHEET.md` are living
+test infrastructure — treat them as production code, not notes.
+
+- **Master Book** — append-only experiment register. Filed rows are
+  immutable. Every field filled including "approach angle". A `bench.*`
+  Programme Cube cell closes only when its master book row is filed.
+- **Build Sheet** — process-not-results reproducibility document. One
+  section per model covering source, conversion pipeline, artefact
+  locations, phase results, and known issues.
+
+### Canonical benchmark directory structure
+
+```
+benchmarks/
+├── MASTER_BOOK.md       # experiment register (append-only)
+├── BUILD_SHEET.md       # reproducibility doc (per-model sections)
+├── bench_*_phase2.py    # evidence scripts (frozen, stay in root)
+├── originals/           # raw unprocessed evidence (screenshots, logs)
+├── reports/             # authored benchmark reports (*.md)
+├── scripts/             # new benchmark runners (bench_track_*.py)
+├── results/             # machine-generated results (*.json)
+├── analysis_results/    # third-party compression analysis
+└── gemopus_*/           # gemopus phase data (structured subdirs)
+```
+
+Evidence runner scripts (phase2, dryrun, etc.) stay in the benchmarks
+root — they are primary Apple-brief evidence. New scripts go to
+`scripts/`.
 
 ---
 
