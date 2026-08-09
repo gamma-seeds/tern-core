@@ -1,0 +1,22 @@
+{
+  "schema_version": "ppl_headroom_kv_cache_point/1.0",
+  "diagnostic_run_id": "95e47854-7998-4e58-b928-87b01bd3d2e6",
+  "point_index": 1,
+  "config": {
+    "b_mse": 5,
+    "weight_threshold": "FP16",
+    "kv_hook_application_scope": "all_layers",
+    "num_sequences": 16,
+    "seq_len": 2048,
+    "model_id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+  },
+  "ppl_eval_run_id": "20260518T035421Z",
+  "baseline_ppl_r7b": 7.9367,
+  "ppl_kv_compressed": null,
+  "ppl_headroom": null,
+  "ppl_headroom_band": null,
+  "kv_cache_compression_ratio": 3.2,
+  "terminated_at_ceiling": false,
+  "hook_construction_failed": false,
+  "notes": "ppl is non-finite (nan). kv_cache_compression_ratio derived theoretically from codebook encoding (16 bits FP16 / b_mse=5 bits per coordinate = 3.2x compression). \u03b21a make_b_mse_hook_uniform is a round-trip hook (round-trip K/V preserves shape/dtype for PPL measurement correctness), so this ratio is computed from b_mse rather than measured from pre/post past_key_values byte sizes. R12 v1.1 \u00a76.1's pre/post-bytes mechanism is vacuous for round-trip hooks; a future R12 v1.2 amendment will clarify the field semantics."
+}

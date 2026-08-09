@@ -1,0 +1,569 @@
+{
+  "benchmark": "BUILD 6 Track B3 \u2014 Native-Ternary KV Compression",
+  "schema_version": 1,
+  "timestamp": "2026-08-09T00:42:59.524265+00:00",
+  "hardware": {
+    "chip": "Apple M4 Pro",
+    "machine": "arm64",
+    "os": "Darwin 25.5.0",
+    "python": "3.12.13",
+    "torch": "2.7.0"
+  },
+  "model": {
+    "id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "n_layers": 22,
+    "n_kv_heads": 4,
+    "head_dim": 64
+  },
+  "method": "Native ternary: {-1, 0, +1} per-vector symmetric threshold, 2-bit packed + FP16 scale",
+  "quality_gates": {
+    "floor": 0.93,
+    "bell_mean": 0.99,
+    "metric": "argmax_match_rate (next-token prediction match vs uncompressed baseline)"
+  },
+  "sweep_results": [
+    {
+      "threshold": 0.3,
+      "mean_match_rate": 0.042,
+      "min_match_rate": 0.01,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.2208566150735732,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.4,
+      "mean_match_rate": 0.032,
+      "min_match_rate": 0.01,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.28264046975737056,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.5,
+      "mean_match_rate": 0.044,
+      "min_match_rate": 0.01,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.353814097657991,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.6,
+      "mean_match_rate": 0.06,
+      "min_match_rate": 0.01,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.4115627977810819,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.7,
+      "mean_match_rate": 0.05,
+      "min_match_rate": 0.02,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.466618839965224,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.8,
+      "mean_match_rate": 0.032,
+      "min_match_rate": 0.02,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.5190007918735879,
+      "verdict": "FLOOR_FAIL"
+    },
+    {
+      "threshold": 0.9,
+      "mean_match_rate": 0.033999999999999996,
+      "min_match_rate": 0.01,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.5687824175000744,
+      "verdict": "FLOOR_FAIL"
+    }
+  ],
+  "best_operating_point": null,
+  "full_results": [
+    {
+      "threshold": 0.3,
+      "mean_match_rate": 0.042,
+      "min_match_rate": 0.01,
+      "max_match_rate": 0.09,
+      "std_match_rate": 0.02785677655436824,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.2208566150735732,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.3,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.2140430533008658,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris. The capital of France in the 50th\u00fcgel of the 50k of the 50k of the 500000500000000000000000000000000000000000000000000000000000005000500000"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.3,
+          "n_tokens": 100,
+          "argmax_matches": 4,
+          "argmax_match_rate": 0.04,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.2136501736111111,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is a popular one, so-sight, as, and-too, made, and, of, a, of, a, a, for, a, a, a, a, for a, a, a, a, for, a, for, a, a, a, a, a, a, a, a, a,,, a, a, a, a, a, a, a, a, a, a, a, a,"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.3,
+          "n_tokens": 100,
+          "argmax_matches": 9,
+          "argmax_match_rate": 0.09,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.22126511676396998,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(the numbers are here are not, and are not are not, and are not, and are, and, and, and, and, and the, and, and and, and and, and,,,,,,, and,, and, and, and, and, and, and, and, and and and and and and and and and and and and and and and and and and and and, and, and, and, and, and,, and and,"
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.3,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.22917981902356901,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", which is the basis of quantum, the basis of the, the, and the, of the, the, and, the, and, for, and, the, and,,,,,,,,,,,,,,,,,,,,,,,,,,,,often, and, and,,,often and and and, and and the and of the, and and and and and and and and and, and,,,"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.3,
+          "n_tokens": 100,
+          "argmax_matches": 1,
+          "argmax_match_rate": 0.01,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.22614491266835016,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is based on the following randomly, and the firstly, foret all, and, not all.\nThe following is the first and, for the, and, being the, and, and, and, and,,,,,,,,,,,,,,,,,, fli, and,,, navy, and, and,,,, n, nd, and,,,, n's, 1 and 3."
+        }
+      ]
+    },
+    {
+      "threshold": 0.4,
+      "mean_match_rate": 0.032,
+      "min_match_rate": 0.01,
+      "max_match_rate": 0.05,
+      "std_match_rate": 0.0132664991614216,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.28264046975737056,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.4,
+          "n_tokens": 100,
+          "argmax_matches": 1,
+          "argmax_match_rate": 0.01,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.2831743777056277,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris of France.\nThe capital of France and the United of the Republic of the United of the 2000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.4,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.2911093355429293,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is a popular method, the gradient, the, the, and, the, most, the int, or, the, the, the, the, the, and, the most, the,,,,,,,,,,,,,,,,,,,,,,,,, mugs,  ,\"the, ,\" the, and, the ,\" the ,\" the ,\" the ,\" the ,\" the \"the, the, the"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.4,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.27817940731859886,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(1) or 3 (1) or 3 (1) 3 3 2 1 7 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 11 11 111 11 11 11 1 11 11 11 111 1111111111"
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.4,
+          "n_tokens": 100,
+          "argmax_matches": 4,
+          "argmax_match_rate": 0.04,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.2840284353956229,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", which is the state of a coin, a, and a, and a, and, and, and, and, and, and,,,,,,, tailed, and, tailed, and, taunted, and a,, tailed, and a, and a, and a, and, ta, a, a, and, a, and, and a, a, a and a, a, and a b a and a and a, and a"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.4,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.27671079282407407,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is to beleast for all to be a on the bakinne he and the bk ks n nis the b and the k and the k and the k and the b and the k and the b and the k and the b and the to and to and and to and and to and and to and and to and and to and to the and to the to to to to to to to to to to to to to to to to to to to to to to"
+        }
+      ]
+    },
+    {
+      "threshold": 0.5,
+      "mean_match_rate": 0.044,
+      "min_match_rate": 0.01,
+      "max_match_rate": 0.12,
+      "std_match_rate": 0.039293765408777,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.353814097657991,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.5,
+          "n_tokens": 100,
+          "argmax_matches": 1,
+          "argmax_match_rate": 0.01,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.3688675257034632,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris of France, and the United are the same, and the, and, and, and, and, and, and and, and, and, and, and, and, and, and, and,,, and, and, and, and and and and and and and and and and and and and and and and and, and, and, and, and, and, and, and, and, and, and, and, and the United, and and, and,"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.5,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.3446040811763468,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is a popular tool, and a new-feature, and a-tool, and a-tool, and a-tool, and, and-tool, and a-tool, and a-tool, and-tool, and, and-the-tool, and-the-tool, and-the-tool, and-the-tool, and-or, and-O-The-T-O-The, and, and-the, and-or, and,"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.5,
+          "n_tokens": 100,
+          "argmax_matches": 12,
+          "argmax_match_rate": 0.12,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.3406688190679733,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(1, 1, and 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,"
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.5,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.3595221419928451,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", which is the case of the superstern of the super, the super, the, the, the, the, the, the, the, the, the, the, the, of,,,,,,,,,,,,,,,,,,,,,,,,,,o,o,o,o,o,,oofo.\nThe, of the, the, the, the, the, the, the, the"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.5,
+          "n_tokens": 100,
+          "argmax_matches": 4,
+          "argmax_match_rate": 0.04,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.3554079203493266,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is the most popular sorting algorithm for the same is as the most, or, or, for the, is, or, for the, for, or, the, for, or, all,,,, or,,, or,,,, or,,, or,, or the, and,, most, or the fast, for,,, or the fast, for the best, the, and,,,,, or,,,, most,,,"
+        }
+      ]
+    },
+    {
+      "threshold": 0.6,
+      "mean_match_rate": 0.06,
+      "min_match_rate": 0.01,
+      "max_match_rate": 0.15,
+      "std_match_rate": 0.04898979485566356,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.4115627977810819,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.6,
+          "n_tokens": 100,
+          "argmax_matches": 15,
+          "argmax_match_rate": 0.15,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4128627232142857,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris of France.\nThe capital of the United of the United of the Capital of the. The United of the. The Capital of. The.\nThe capital of the.\nThe United of the.\nThe Capital of the.\nThe capital of.\nThe capital of the.\n\nThe capital of.\nThe capital of the.\n\nThe capital of.\n\nThe capital of the. The capital of.\nThe capital of.The. The of the. The"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.6,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4228745791245791,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is commonly known, the first, and now, in-sou, and, in, and, and, and, and, and, and, and, and, and, and, and, and, and, and, and,,,,,, and, and,, and, and, and,, and, and and, and, and and and, and and, and, and,, and, and, and, and, and and,, and, and"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.6,
+          "n_tokens": 100,
+          "argmax_matches": 7,
+          "argmax_match_rate": 0.07,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4041233905859049,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(0) values, 1, 1, and 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1. 1, 1. "
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.6,
+          "n_tokens": 100,
+          "argmax_matches": 4,
+          "argmax_match_rate": 0.04,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4098956689288721,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", a. the most, is the m, or the, the less the m, the, is, the, the, the, and, the, the, the, the, the,,,,,,,,,,,,,, meme,, mnemata, and, and, mnemata, the, the, the, the, and the, the, and,,, mnemata, and the, the, and the, the,"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.6,
+          "n_tokens": 100,
+          "argmax_matches": 1,
+          "argmax_match_rate": 0.01,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4080576270517677,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is to beleast for.\nThe best and the fastest of the best for the best.\nThe fastest of the the fastest the the the fastest of the the the fastest of the the the fastest of the the the fastest the the the the the fastest of the the the the fastest of the the the the fastest of the the the the the fastest of the the the the the fastest of the the the the the the the fastest"
+        }
+      ]
+    },
+    {
+      "threshold": 0.7,
+      "mean_match_rate": 0.05,
+      "min_match_rate": 0.02,
+      "max_match_rate": 0.07,
+      "std_match_rate": 0.020976176963403034,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.466618839965224,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.7,
+          "n_tokens": 100,
+          "argmax_matches": 7,
+          "argmax_match_rate": 0.07,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.4683500744047619,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris. The capital of France is the capital of the United States of the of the capital of the United of the of the of the of the of the of the of the of the of the of the of the of the of the of the of of of the of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of of"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.7,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.46113725142045453,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is often called, the \"in\" the \"out\" of the \"in\"at\"thein\"theat'the\"at'the\"in\"the\"at'the\"in\"the\"at\"the\"'in'the's,in's's,in'of_'_too_in_of_the_high_guing\r\n<the-to-se-o-o-i-get-in-down-"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.7,
+          "n_tokens": 100,
+          "argmax_matches": 7,
+          "argmax_match_rate": 0.07,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.46967280676605505,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(1, 2, 2, 3, 4) to represent the three values of the three, the three, the three, the three, the three, the three, to, the three, the, three, the-three, to, the three, to, the three, was, the three, to, to, to, the to, the,,,,,,,,,,,,,,,,,,,,,,,"
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.7,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.46613679108796297,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", which is the case of the universe, which is the place of the unsolum, the place of the um in, the case of the unceverted, a, the, the, a, the, the, the, the, the, the, the,,the, from, the, the, and, the, in the matter, and, the, the, and, the, and, the, and,,,,,,,,,,,"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.7,
+          "n_tokens": 100,
+          "argmax_matches": 6,
+          "argmax_match_rate": 0.06,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.46779727614688554,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is the most of the bestest.\nThe best of the bestest is the bestest.\nThe best of the fastest.\nThe best of the best is the same for the best.\nTheory of the best is the best for the best is for.\nThe best for the best for the for the best for the the best of the best and the the is. The for the 'as' as for'as the'fastest, the best for the the best"
+        }
+      ]
+    },
+    {
+      "threshold": 0.8,
+      "mean_match_rate": 0.032,
+      "min_match_rate": 0.02,
+      "max_match_rate": 0.05,
+      "std_match_rate": 0.01469693845669907,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.5190007918735879,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.8,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5171621347402597,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris of France, the capital of the United Republics of the 189 of the 189, the 18, the 18/9, the 18/99/9, 18, 91/999/99,999,99,99,99,99,99,00,18, 18, 18, 1, 13"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.8,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5197367555765994,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is used to be, and, in, 1.2, C-and, 1.D, where, in, 1.D, where, where, in 1.D, where, in, 1,1.D. Where,1. In, 1.D. In, 1.D. Where, 1.1D.Where, 1.1D.Where, 1.D.Where, 1.In"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.8,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5154018322560467,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(a, b-, 1, and 1, b, c-, b-, 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and 1, and and 1, and "
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.8,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5207075639204546,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", aka,y Superposition, aka, a, and, a, and, a, a, and, a, and, a, and, a, and, and, and, a, and, and,,,,,,, a,, a, a, and, and, a, and, a, and, and a, and a, and a, and a, and a, and a, a, a, and a, and a,"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.8,
+          "n_tokens": 100,
+          "argmax_matches": 2,
+          "argmax_match_rate": 0.02,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5219956728745792,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is inefficient.\nThe fastest sorting algorithm is inefficient.\nThe fastest sorting algorithm algorithm is the most efficient and the fastest sorting algorithm algorithm for the most inefficient and the most ineffication.\nThe fastest sorting algorithm algorithmist for the most of the data in the inkegs and thespaek is a, but however, is in the inegenercy, in, in, the,s in, in the, it, being the"
+        }
+      ]
+    },
+    {
+      "threshold": 0.9,
+      "mean_match_rate": 0.033999999999999996,
+      "min_match_rate": 0.01,
+      "max_match_rate": 0.05,
+      "std_match_rate": 0.014966629547095767,
+      "mean_compression_ratio": 14.222222222222223,
+      "mean_zero_ratio": 0.5687824175000744,
+      "floor_pass": false,
+      "mean_pass": false,
+      "verdict": "FLOOR_FAIL",
+      "per_prompt": [
+        {
+          "prompt": "The capital of France is",
+          "threshold": 0.9,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5718496347402597,
+          "baseline_text": "Paris.\n\n2. B. The capital of Germany is Berlin.\n\n3. C. The capital of the United States is Washington, D.C.\n\n4. A. The capital of Canada is Ottawa.\n\n5. D. The capital of Australia is Canberra.\n\n6. B. The capital of the United Kingdom is London.\n\n7. C. The capital of New Zealand is Wellington.\n\n8. A. The",
+          "compressed_text": "Paris, and the capital of the United Kingdom ofks, and the number of the number of the number of the number of the number of the number of the number of the number of the number of the number of the number of the number of the number of the number the number of the number the number of the number the number of the number of the number of the number of the number of the number of the number of the water or the ether of the (world to 55 and"
+        },
+        {
+          "prompt": "In machine learning, the gradient descent algorithm",
+          "threshold": 0.9,
+          "n_tokens": 100,
+          "argmax_matches": 1,
+          "argmax_match_rate": 0.01,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5667934225063131,
+          "baseline_text": "is a popular optimization algorithm that is used to find the minimum of a function. It works by iteratively updating the parameters of a model until the error between the model's output and the true output is minimized. The algorithm works by repeatedly computing the gradient of the loss function with respect to the model's parameters, and then updating the parameters using a step size. The gradient descent algorithm is used in many machine learning algorithms, including gradient boosting, neural networks, and deep learning.</s>",
+          "compressed_text": "is used for the second, and the, as, and, the,\n<|system||inspellsiodecshdescdesdescfrontcxxcdefdescdecedccepscecceccecdeadelsonsocep-cetcepscecceccepchdingcandccecechceccecececcecdececechcdecegececececececececech"
+        },
+        {
+          "prompt": "The ternary number system uses three values",
+          "threshold": 0.9,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5647870621351125,
+          "baseline_text": "(0, 1, and 2) to represent numbers. The first value, 0, represents the lowest possible number. The second value, 1, represents the next highest number. The third value, 2, represents the highest possible number. The ternary system is used in many areas of science and engineering, including computer science, electrical engineering, and physics.</s> \n<|user|>\nCan you explain how the binary number system works and how it",
+          "compressed_text": "(a, b, b, b, c, b, a, s, s, s, s, s, s, s, t, ternary, s, t, s, s, s, s, s, s, s, t, s, s, s, s, s, s, s, s, s, s, s, s, s, s, s, s, s, s, t, t, s, s, s"
+        },
+        {
+          "prompt": "Quantum computing relies on superposition",
+          "threshold": 0.9,
+          "n_tokens": 100,
+          "argmax_matches": 3,
+          "argmax_match_rate": 0.03,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5709372369528619,
+          "baseline_text": ", a concept that is not well understood by most people. Here\u2019s a simple explanation of what superposition is and how it works.\n\nSuperposition is a fundamental property of quantum systems. It means that a quantum system can exist in multiple states simultaneously. In other words, a quantum system can be in multiple states at the same time.\n\nIn the context of quantum computing, superposition is used to store and manipulate quantum bits (qubits) in a way that is more efficient",
+          "compressed_text": ", a.k. A.1.1. A.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1"
+        },
+        {
+          "prompt": "The fastest sorting algorithm for random data",
+          "threshold": 0.9,
+          "n_tokens": 100,
+          "argmax_matches": 5,
+          "argmax_match_rate": 0.05,
+          "compression_ratio": 14.222222222222221,
+          "mean_zero_ratio": 0.5695447311658249,
+          "baseline_text": "is the quicksort algorithm. It is a divide-and-conquer algorithm that divides the input array into two halves, sorts each half, and then merges the sorted halves back together. The time complexity of quicksort is O(n log n), which makes it one of the most efficient sorting algorithms.\n\n2. Merge sort: Merge sort is another divide-and-conquer algorithm that divides the input array into two halves, sorts each half",
+          "compressed_text": "is the fastest one for the fastest. The fastest one for the fastest one for the fast one one. For the fastest one, the fastest one, the fastest one, for the fast one, the fastest one, the last, really, is never the, the, the way, the, the fastest, the one, the one, the many, and the many, the many, and the many, the, the, the, the, the"
+        }
+      ]
+    }
+  ],
+  "peak_rss_mb": 6768.28125
+}

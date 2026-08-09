@@ -1,0 +1,97 @@
+{
+  "benchmark": "BUILD 6 Track B2 \u2014 FP16-KV Baseline",
+  "schema_version": 1,
+  "timestamp": "2026-08-08T06:52:34.141247+00:00",
+  "hardware": {
+    "chip": "Apple M4 Pro",
+    "machine": "arm64",
+    "os": "Darwin 25.5.0",
+    "python": "3.12.13",
+    "torch": "2.7.0"
+  },
+  "model": {
+    "id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "n_layers": 22,
+    "n_kv_heads": 4,
+    "n_attn_heads": 32,
+    "head_dim": 64,
+    "params": 1100048384
+  },
+  "baseline_result": {
+    "kv_cache_bytes": 2523136,
+    "kv_cache_mb": 2.40625,
+    "kv_bytes_per_token": 45056.0,
+    "kv_bytes_per_token_per_layer": 2048.0,
+    "total_seq_len": 56,
+    "tokens_per_sec": 27.798480573538956,
+    "prefill_ms": 112.90854203980416,
+    "decode_ms": 1798.6594579415396,
+    "kv_dtype": "float32",
+    "baseline_ppl": 5.542239429665158,
+    "baseline_ppl_loss": 1.712398648262024,
+    "peak_rss_mb": 6878.953125,
+    "tag": "Measured"
+  },
+  "scaling": [
+    {
+      "target_seq_len": 64,
+      "actual_seq_len": 64,
+      "kv_cache_bytes": 2883584,
+      "kv_cache_mb": 2.75,
+      "kv_bytes_per_token": 45056.0
+    },
+    {
+      "target_seq_len": 128,
+      "actual_seq_len": 128,
+      "kv_cache_bytes": 5767168,
+      "kv_cache_mb": 5.5,
+      "kv_bytes_per_token": 45056.0
+    },
+    {
+      "target_seq_len": 256,
+      "actual_seq_len": 256,
+      "kv_cache_bytes": 11534336,
+      "kv_cache_mb": 11.0,
+      "kv_bytes_per_token": 45056.0
+    },
+    {
+      "target_seq_len": 512,
+      "actual_seq_len": 512,
+      "kv_cache_bytes": 23068672,
+      "kv_cache_mb": 22.0,
+      "kv_bytes_per_token": 45056.0
+    }
+  ],
+  "all_runs": [
+    {
+      "run": 1,
+      "kv_cache_bytes": 2523136,
+      "kv_cache_mb": 2.40625,
+      "tokens_per_sec": 28.028586916599412
+    },
+    {
+      "run": 2,
+      "kv_cache_bytes": 2523136,
+      "kv_cache_mb": 2.40625,
+      "tokens_per_sec": 27.798480573538956
+    },
+    {
+      "run": 3,
+      "kv_cache_bytes": 2523136,
+      "kv_cache_mb": 2.40625,
+      "tokens_per_sec": 27.864255655754025
+    }
+  ],
+  "icon_1_rung": {
+    "label": "1\u00d7 (FP16-KV baseline, MEASURED)",
+    "kv_cache_mb_at_56_tokens": 2.40625,
+    "kv_bytes_per_token": 45056.0,
+    "reference_for": "Track A 5.3\u00d7 theoretical / 3.88\u00d7 measured",
+    "tag": "Measured"
+  },
+  "notes": [
+    "KV cache stores in torch.float32 (model loaded as float32). Actual bytes per token per layer: 2048 B.",
+    "Theoretical FP16 per token per layer: 1024 B (2 \u00d7 4 KV heads \u00d7 64 head_dim \u00d7 2 bytes).",
+    "This establishes the '1\u00d7' denominator for all KV compression ratios."
+  ]
+}

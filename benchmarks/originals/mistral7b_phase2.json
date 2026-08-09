@@ -1,0 +1,130 @@
+{
+  "runner": "bench_mistral7b_phase2.py",
+  "model_path": "/Users/syn/synapticode/tern-core/output/coreml_models/mistral_7b_ternary.mlpackage",
+  "timestamp_utc": "2026-04-13T23:47:50.226757+00:00",
+  "hardware": "Apple M4 Pro",
+  "python": "3.12.13",
+  "coremltools": "9.0",
+  "numpy": "2.4.3",
+  "seq_len": 64,
+  "warmup_runs": 10,
+  "benchmark_runs": 50,
+  "stage": "done",
+  "spec": {
+    "input_name": "input_ids",
+    "input_dtype": "INT32",
+    "input_shape": [
+      1,
+      64
+    ],
+    "output_name": "logits",
+    "spec_version": 8
+  },
+  "raw_benchmarks": {
+    "ALL": {
+      "compute_units": "ALL",
+      "load_seconds": 40.13636462499926,
+      "latency_mean_ms": 222.6026907999767,
+      "latency_median_ms": 165.03604149966122,
+      "latency_min_ms": 163.04029099956097,
+      "latency_max_ms": 1250.436250000348,
+      "latency_stdev_ms": 225.22701352677942,
+      "tokens_per_second": 287.5077554992732,
+      "peak_rss_mb": 28493.015625,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_NE": {
+      "compute_units": "CPU_AND_NE",
+      "load_seconds": 55.338083250000636,
+      "latency_mean_ms": 215.073134139966,
+      "latency_median_ms": 212.64529149902955,
+      "latency_min_ms": 208.79429200067534,
+      "latency_max_ms": 252.77825000011944,
+      "latency_stdev_ms": 9.679961575621446,
+      "tokens_per_second": 297.5731964660443,
+      "peak_rss_mb": 31966.546875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    },
+    "CPU_AND_GPU": {
+      "compute_units": "CPU_AND_GPU",
+      "load_seconds": 41.52129029199932,
+      "latency_mean_ms": 226.55034405986953,
+      "latency_median_ms": 165.274999999383,
+      "latency_min_ms": 161.6524170003686,
+      "latency_max_ms": 1359.6524999993562,
+      "latency_stdev_ms": 245.1673177802185,
+      "tokens_per_second": 282.49791570869115,
+      "peak_rss_mb": 31966.546875,
+      "warmup_runs": 10,
+      "benchmark_runs": 50
+    }
+  },
+  "palettised_benchmarks": {},
+  "model_sizes_mb": {
+    "raw": 13813.707530021667
+  },
+  "energy": {
+    "raw_best": {
+      "label": "raw_CPU_AND_NE",
+      "power_mean_w": 5.388285714285715,
+      "power_median_w": 5.4225,
+      "power_stdev_w": 0.7028729427331613,
+      "power_samples": 14,
+      "inferences": 72,
+      "energy_per_inference_mj": 1122.5595238095239
+    },
+    "pal_best_note": "skipped: Phase C failed",
+    "cpu_only_baseline": {
+      "compute_units": "CPU_ONLY",
+      "mean_power_w": 5.458,
+      "stdev_power_w": 0.955,
+      "mj_per_inference": 1137.1,
+      "inferences": 72,
+      "power_samples": 14,
+      "sustain_seconds": 15,
+      "mean_latency_ms": 210.16,
+      "tokens_per_second": 304.5,
+      "latency_stdev_ms": 4.58
+    },
+    "cpu_and_gpu_baseline": {
+      "compute_units": "CPU_AND_GPU",
+      "mean_power_w": 20.142,
+      "stdev_power_w": 3.755,
+      "mj_per_inference": 3320.1,
+      "inferences": 91,
+      "power_samples": 14,
+      "sustain_seconds": 15,
+      "mean_latency_ms": 165.02,
+      "tokens_per_second": 387.8,
+      "latency_stdev_ms": 0.89
+    },
+    "baseline_date": "2026-04-15"
+  },
+  "error": null,
+  "validation": {
+    "load_s": 34.16554899999937,
+    "predict_s": 0.2846652920015913,
+    "output_shapes": {
+      "logits": [
+        1,
+        64,
+        32000
+      ]
+    },
+    "rss_mb": 28461.140625
+  },
+  "phase_c_error": {
+    "type": "ValueError",
+    "message": "Input X contains infinity or a value too large for dtype('float64').",
+    "traceback": "Traceback (most recent call last):\n  File \"/Users/syn/synapticode/tern-core/benchmarks/bench_mistral7b_phase2.py\", line 397, in main\n    pal_time = palettise_model(MODEL_PATH, PALETTISED_PATH)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/tern-core/benchmarks/bench_mistral7b_phase2.py\", line 270, in palettise_model\n    pal = palettize_weights(model, config)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_post_training_quantization.py\", line 49, in decorator\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_post_training_quantization.py\", line 267, in palettize_weights\n    return _model_utils._apply_graph_pass(mlmodel, weight_palettizer)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/models/utils.py\", line 1369, in _apply_graph_pass\n    cur_graph_pass.apply(prog)\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 127, in apply\n    apply_block(f)\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/converters/mil/mil/passes/helper.py\", line 64, in wrapper\n    return _func(*args)\n           ^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 124, in apply_block\n    self.transform_op(op)\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 1073, in transform_op\n    lut_params = self.blockwise_compress(\n                 ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 865, in blockwise_compress\n    return palettize_weights.grouped_channelwise_compress(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 977, in grouped_channelwise_compress\n    palettize_weights._get_lut_and_indices(\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 751, in _get_lut_and_indices\n    lut, indices = compress_kmeans(val, nbits, cluster_dim, vector_axis)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/optimize/coreml/_quantization_passes.py\", line 706, in compress_kmeans\n    lut, indices = _get_kmeans_lookup_table_and_weight(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/coremltools/models/neural_network/quantization_utils.py\", line 426, in _get_kmeans_lookup_table_and_weight\n    kmeans = KMeans(n_clusters, init=\"k-means++\", tol=1e-2, n_init=1, random_state=0).fit(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/base.py\", line 1336, in wrapper\n    return fit_method(estimator, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/cluster/_kmeans.py\", line 1460, in fit\n    X = validate_data(\n        ^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/utils/validation.py\", line 2902, in validate_data\n    out = check_array(X, input_name=\"X\", **check_params)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/utils/validation.py\", line 1074, in check_array\n    _assert_all_finite(\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/utils/validation.py\", line 133, in _assert_all_finite\n    _assert_all_finite_element_wise(\n  File \"/Users/syn/synapticode/venv/lib/python3.12/site-packages/sklearn/utils/validation.py\", line 182, in _assert_all_finite_element_wise\n    raise ValueError(msg_err)\nValueError: Input X contains infinity or a value too large for dtype('float64').\n"
+  },
+  "peak_rss_mb": 43577.046875,
+  "watchdog_last_sample": {
+    "ts": "2026-04-14T00:04:14.226975+00:00",
+    "comp": 346561,
+    "free": 4703,
+    "spec": 3212
+  }
+}

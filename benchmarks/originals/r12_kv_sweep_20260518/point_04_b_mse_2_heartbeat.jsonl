@@ -1,0 +1,49 @@
+{"t_iso": "2026-05-18T07:06:33Z", "wall_s": 0.0, "phase": "eval_start", "n_sequences": 16, "alloc_MB": null, "heartbeat_token_interval": 512}
+{"t_iso": "2026-05-18T07:06:33Z", "wall_s": 0.0, "seq": 0, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:07:02Z", "wall_s": 29.362, "seq": 0, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 513, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:07:45Z", "wall_s": 71.773, "seq": 0, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 1025, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:08:44Z", "wall_s": 131.384, "seq": 0, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 1537, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:10:10Z", "wall_s": 217.165, "seq": 0, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 217.164, "seq_loss": NaN, "total_loss": NaN, "total_scored": 2048, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:10:10Z", "wall_s": 217.166, "seq": 1, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:10:42Z", "wall_s": 249.379, "seq": 1, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 2561, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:11:29Z", "wall_s": 296.21, "seq": 1, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 3073, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:12:40Z", "wall_s": 367.01, "seq": 1, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 3585, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:14:11Z", "wall_s": 458.511, "seq": 1, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 241.344, "seq_loss": NaN, "total_loss": NaN, "total_scored": 4096, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:14:11Z", "wall_s": 458.512, "seq": 2, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:14:44Z", "wall_s": 491.294, "seq": 2, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 4609, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:15:31Z", "wall_s": 538.659, "seq": 2, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 5121, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:16:39Z", "wall_s": 606.207, "seq": 2, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 5633, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:18:08Z", "wall_s": 695.431, "seq": 2, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 236.918, "seq_loss": NaN, "total_loss": NaN, "total_scored": 6144, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:18:08Z", "wall_s": 695.433, "seq": 3, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:18:40Z", "wall_s": 726.745, "seq": 3, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 6657, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:19:25Z", "wall_s": 772.232, "seq": 3, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 7169, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:20:28Z", "wall_s": 834.78, "seq": 3, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 7681, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:21:48Z", "wall_s": 915.135, "seq": 3, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 219.703, "seq_loss": NaN, "total_loss": NaN, "total_scored": 8192, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:21:48Z", "wall_s": 915.136, "seq": 4, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:22:20Z", "wall_s": 946.924, "seq": 4, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 8705, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:23:06Z", "wall_s": 993.623, "seq": 4, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 9217, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:24:15Z", "wall_s": 1061.822, "seq": 4, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 9729, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:25:40Z", "wall_s": 1147.075, "seq": 4, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 231.939, "seq_loss": NaN, "total_loss": NaN, "total_scored": 10240, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:25:40Z", "wall_s": 1147.077, "seq": 5, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:26:13Z", "wall_s": 1180.656, "seq": 5, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 10753, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:27:01Z", "wall_s": 1228.66, "seq": 5, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 11265, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:28:09Z", "wall_s": 1296.635, "seq": 5, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 11777, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:29:30Z", "wall_s": 1377.632, "seq": 5, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 230.555, "seq_loss": NaN, "total_loss": NaN, "total_scored": 12288, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:29:30Z", "wall_s": 1377.632, "seq": 6, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:30:02Z", "wall_s": 1409.523, "seq": 6, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 12801, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:30:48Z", "wall_s": 1455.176, "seq": 6, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 13313, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:31:50Z", "wall_s": 1517.463, "seq": 6, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 13825, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:33:13Z", "wall_s": 1599.681, "seq": 6, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 222.049, "seq_loss": NaN, "total_loss": NaN, "total_scored": 14336, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:33:13Z", "wall_s": 1599.682, "seq": 7, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:33:46Z", "wall_s": 1632.787, "seq": 7, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 14849, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:34:38Z", "wall_s": 1685.119, "seq": 7, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 15361, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:35:50Z", "wall_s": 1757.458, "seq": 7, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 15873, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:37:25Z", "wall_s": 1852.581, "seq": 7, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 252.899, "seq_loss": NaN, "total_loss": NaN, "total_scored": 16384, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:37:25Z", "wall_s": 1852.582, "seq": 8, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:37:58Z", "wall_s": 1885.134, "seq": 8, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 16897, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:38:44Z", "wall_s": 1930.898, "seq": 8, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 17409, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:39:44Z", "wall_s": 1991.481, "seq": 8, "phase": "hb", "token": 1536, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 17921, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:41:03Z", "wall_s": 2070.465, "seq": 8, "phase": "seq_end", "L_eff": 2049, "seq_wall_s": 217.882, "seq_loss": NaN, "total_loss": NaN, "total_scored": 18432, "ppl_partial": NaN, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:41:03Z", "wall_s": 2070.465, "seq": 9, "phase": "seq_start", "L_eff": 2049, "alloc_MB": null}
+{"t_iso": "2026-05-18T07:41:33Z", "wall_s": 2100.629, "seq": 9, "phase": "hb", "token": 512, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 18945, "ppl_partial": NaN}
+{"t_iso": "2026-05-18T07:42:19Z", "wall_s": 2145.73, "seq": 9, "phase": "hb", "token": 1024, "L_eff": 2049, "alloc_MB": null, "total_loss": NaN, "total_scored": 19457, "ppl_partial": NaN}

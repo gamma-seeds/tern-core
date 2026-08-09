@@ -1,0 +1,87 @@
+{
+  "reconciliation": "BUILD 6.1 — Track A Accounting Reconciliation",
+  "date": "2026-08-09",
+  "schema_version": 1,
+  "formula": {
+    "bits_per_slot": "d × (b_mse + 1) / 8 + 6",
+    "d": 64,
+    "b_mse": 3,
+    "bytes_per_slot": 38,
+    "breakdown": {
+      "pq_indices_bytes": 24,
+      "qjl_signs_bytes": 8,
+      "pq_norm_bytes": 2,
+      "qjl_r_norm_bytes": 4
+    },
+    "regenerable_shared_per_unit_bytes": 16640,
+    "regenerable_shared_breakdown": {
+      "qjl_S_d_x_d_fp32": 16384,
+      "pq_rotation_d_fp32": 256
+    }
+  },
+  "tinyllama": {
+    "model": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "n_layers": 22,
+    "n_kv_heads": 4,
+    "head_dim": 64,
+    "kv_dtype": "float32",
+    "bytes_per_token_uncompressed": 45056,
+    "seq_len": 56,
+    "uncompressed_bytes": 2523136,
+    "accountings": {
+      "track_a_raw": {
+        "compressed_bytes": 650496,
+        "ratio": 3.878787878787879,
+        "method": "_count_object_bytes (in-memory tensor walk)",
+        "tag": "Measured"
+      },
+      "opt_a_56_tokens": {
+        "per_token_bytes": 374528,
+        "shared_bytes": 2928640,
+        "total_compressed_bytes": 3303168,
+        "ratio": 0.7638,
+        "tag": "Derived"
+      },
+      "opt_b_56_tokens": {
+        "compressed_bytes": 374528,
+        "ratio": 6.7368,
+        "tag": "Derived"
+      }
+    },
+    "scaling": [
+      {"seq_len": 56, "opt_a_ratio": 0.76, "opt_b_ratio": 6.74, "shared_pct_of_opt_a": 88.7},
+      {"seq_len": 256, "opt_a_ratio": 3.64, "opt_b_ratio": 6.74, "shared_pct_of_opt_a": 62.4},
+      {"seq_len": 1024, "opt_a_ratio": 4.72, "opt_b_ratio": 6.74, "shared_pct_of_opt_a": 30.0},
+      {"seq_len": 4096, "opt_a_ratio": 6.08, "opt_b_ratio": 6.74, "shared_pct_of_opt_a": 9.7},
+      {"seq_len": 16384, "opt_a_ratio": 6.57, "opt_b_ratio": 6.74, "shared_pct_of_opt_a": 2.5}
+    ]
+  },
+  "llama_3_2_1b_cross_check": {
+    "model": "unsloth/Llama-3.2-1B-Instruct",
+    "n_layers": 16,
+    "n_kv_heads": 8,
+    "head_dim": 64,
+    "kv_dtype": "fp32",
+    "seq_len": 106,
+    "opt_a_ratio": 2.20,
+    "opt_b_ratio": 6.74,
+    "raw_ratio": 0.39,
+    "source": "tq_bench_results_llama_3_2_1b_instruct_ternpacked_20260513T041543Z.json"
+  },
+  "ratio_map": {
+    "pure_coding_vs_fp16": 5.33,
+    "pure_coding_vs_fp32": 10.67,
+    "with_qjl_signs_vs_fp16": 4.00,
+    "with_qjl_signs_vs_fp32": 8.00,
+    "opt_b_vs_fp16": 3.37,
+    "opt_b_vs_fp32": 6.74,
+    "track_a_raw_vs_fp32": 3.88,
+    "published_original": 5.33
+  },
+  "recommendation": {
+    "claim_sheet_primary": "opt_b",
+    "claim_sheet_secondary": "opt_a_at_stated_seq_len",
+    "retire": ["5.33× (pure coding, no overhead, FP16 ref)", "3.88× (implementation artifact)"],
+    "quality_caveat": "No quality demonstrated — open-loop only, R12 closed-loop NaN, B3 native-ternary 1-15% match"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "benchmark": "BUILD 6 Track A \u2014 TurboQuant KV Replication",
+  "schema_version": 1,
+  "timestamp": "2026-08-08T06:49:00.199836+00:00",
+  "hardware": {
+    "chip": "arm",
+    "machine": "arm64",
+    "os": "Darwin 25.5.0",
+    "python": "3.12.13",
+    "torch": "2.7.0"
+  },
+  "model": {
+    "id": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "n_layers": 22,
+    "n_kv_heads": 4,
+    "n_attn_heads": 32,
+    "head_dim": 64,
+    "params": 1100048384
+  },
+  "original_config": {
+    "source": "benchmarks/originals/tq_bench_results.json",
+    "b_mse": 3,
+    "n_layers": 22,
+    "n_heads": 4,
+    "head_dim": 64,
+    "mixed_precision": true,
+    "method": "IncrementalTQCompressor open-loop (compress as side effect)"
+  },
+  "replication_config": {
+    "prompt": "The capital of France is",
+    "generate_tokens": 50,
+    "n_runs": 3,
+    "device": "cpu",
+    "dtype": "float32"
+  },
+  "original_result": {
+    "kv_cache_compression_ratio": 5.3,
+    "prefill_overhead_ms": 12.4,
+    "per_token_encode_ms": 0.38,
+    "peak_memory_uncompressed_mb": 412.0,
+    "peak_memory_compressed_mb": 78.0,
+    "perplexity_baseline_fp16": 7.82,
+    "perplexity_with_tq": 8.14,
+    "tag": "Measured (2026-03-30)"
+  },
+  "replication_result": {
+    "compression_ratio": 3.878787878787879,
+    "prefill_encode_ms": 68.70645808521658,
+    "per_token_encode_ms_mean": 22.10838579107076,
+    "uncompressed_bytes": 2523136,
+    "compressed_bytes": 650496,
+    "baseline_ppl": 5.542239429665158,
+    "baseline_ppl_loss": 1.712398648262024,
+    "peak_rss_mb": 6882.0,
+    "tag": "Measured"
+  },
+  "all_runs": [
+    {
+      "run": 1,
+      "compression_ratio": 3.878787878787879,
+      "prefill_encode_ms": 76.47783402353525,
+      "per_token_encode_ms_mean": 20.855138360057026,
+      "uncompressed_bytes": 2523136,
+      "compressed_bytes": 650496
+    },
+    {
+      "run": 2,
+      "compression_ratio": 3.878787878787879,
+      "prefill_encode_ms": 68.70645808521658,
+      "per_token_encode_ms_mean": 22.10838579107076,
+      "uncompressed_bytes": 2523136,
+      "compressed_bytes": 650496
+    },
+    {
+      "run": 3,
+      "compression_ratio": 3.878787878787879,
+      "prefill_encode_ms": 68.552291020751,
+      "per_token_encode_ms_mean": 22.440340023022145,
+      "uncompressed_bytes": 2523136,
+      "compressed_bytes": 650496
+    }
+  ],
+  "verdict": "DRIFT \u2014 median 3.88\u00d7 vs original 5.3\u00d7 (delta 26.8%); root cause needed",
+  "notes": [
+    "Open-loop measurement: compressor.append() records compressed state as side effect; model uses uncompressed past_key_values for next forward pass.",
+    "Compression ratio is MEASURED from byte accounting (uncompressed vs compressed output).",
+    "PPL is model baseline, NOT KV-compression quality impact.",
+    "R12 sweep (2026-05-18) attempted closed-loop round-trip and got NaN PPL across all b_mse values \u2014 the open-loop measurement is the only methodology that produces finite quality numbers."
+  ]
+}

@@ -1,6 +1,6 @@
 # tern-core
 
-tern-core converts LLM weights to ternary precision automatically. No configuration. No quality loss. Built to run alongside KV cache compression on edge hardware.
+tern-core converts LLM weights to ternary precision automatically. No configuration. No quality loss. Built for edge hardware.
 
 ---
 
@@ -34,17 +34,14 @@ No protection lists. No manual layer selection. No broken output.
 
 ---
 
-## Stack position
+## Whole-model compression
 
-tern-core handles the **weight layer**.
+| Model          | FP32 size | tern-core   | Compression | Layers converted |
+|----------------|-----------|-------------|-------------|------------------|
+| TinyLlama-1.1B | 4.1 GB    | 471.6 MB    | **8.4×**    | 154/155          |
+| Mistral-7B     | 14.5 GB   | 2.27 GB     | 6.4×        | 96.4% ternary    |
 
-| Layer          | Tool              | Reduction         |
-|----------------|-------------------|-------------------|
-| Model weights  | tern-core         | 14.5 GB → 2.27 GB |
-| KV cache       | TurboQuant (ICLR 2026) | 6x memory    |
-| Combined (7B)  | Full stack        | ~3.5 GB total     |
-
-Pair with TurboQuant for KV cache compression. Combined stack runs a 7B parameter model at ~3.5GB total system footprint on Apple Silicon. Korean NPU silicon is our strategic deployment target.
+> **Benchmark methodology note:** KV cache compression figures from the earlier release (v0.1.0) were open-loop storage measurements under a specific accounting; closed-loop quality-verified KV results will be published when available.
 
 ---
 
