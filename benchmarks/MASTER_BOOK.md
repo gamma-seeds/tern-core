@@ -496,4 +496,29 @@ The current locked public benchmarks and their backing experiments.
 
 ---
 
-*Next EXP-ID: EXP-020*
+### EXP-020 — Ternary vs INT4 Weight-Axis PoC (TinyLlama)
+
+| Field | Content |
+|-------|---------|
+| **ID** | EXP-020 |
+| **Date** | 2026-08-09 |
+| **Model** | TinyLlama/TinyLlama-1.1B-Chat-v1.0 |
+| **Model size** | FP16: 2,200 MB · INT4 (block-32): 807 MB · Ternary 2-bit: 504 MB |
+| **Hardware** | Mac (Desktop session), torch, Python 3.12 |
+| **Software stack** | tern-core quantisers (TernaryQuantizer, threshold 0.7), INT4 symmetric block-32 quantiser |
+| **Method** | Weight-axis-only comparison: FP16 vs INT4 vs ternary 2-bit on all 154 quantisable Linear layers. Per-layer Frobenius reconstruction error + zero-weight sparsity. No inference, no PPL, no NPU |
+| **Approach angle** | tern-core's own quantisers, weight-axis only, no NPU — reconstruction error honestly reported. Measures the footprint gap below INT4 (SqueezeBits/Rebellions' floor) and honestly exposes the quality gap that TFH must close. Framed for a SqueezeBits audience: INT4 is their floor, ternary goes one bit below it |
+| **Variables held** | threshold=0.7, INT4 block_size=32, symmetric quantisation, per-layer α scaling |
+| **Variables swept** | None (single-point per scheme) |
+| **Restrictions** | Weight-axis only — no closed-loop inference, no PPL, no TPS/W. Reconstruction error is a proxy, not a quality metric. TPS/W requires ATOM silicon (Phase 1, gated on RBLN access) |
+| **Shortcuts** | Naive post-training quantisation — no fine-tuning, no calibration dataset |
+| **Raw result** | Ternary 2.0 b/param (504 MB whole-model) vs INT4 4.5 b/param (807 MB). Ternary 2.25× below INT4, 4.36× below FP16. Mean zero-weight sparsity: 48.1%. Mean reconstruction error: INT4 9.9%, ternary 45.4% (relative Frobenius) |
+| **Derived result** | **C3a reconciliation (RESOLVED):** whole-model 4.36× vs FP16 and site's 8.4× vs FP32 are the same compression through different baselines — FP16 is half of FP32, so 8.4 ÷ 2 ≈ 4.2 ≈ 4.36. Two independent methods, months apart, agreeing within 4%. The INT4 frame is correct for the SqueezeBits audience; the FP32 frame is correct for the general one. Every × names its baseline, per the standing rule |
+| **Quality verdict** | **Footprint win measured; quality unproven.** Naive PTQ ternary at threshold 0.7 shows 45.4% weight reconstruction error — quality recovery below INT4 requires TFH fine-tuning (E2). This is the collaboration rationale for SqueezeBits, not a weakness to hide |
+| **Absolute before/after** | FP16 2,200 MB → INT4 807 MB → Ternary 504 MB (weight-axis: FP16 1,938 MB → INT4 545 MB → Ternary 242 MB) |
+| **Report path** | ecc-ternary/uploads/REBELLIONS_TERNARY_VS_INT4_POC_20260809T014845Z/poc_results.json |
+| **Claim status** | INTERNAL (T0 — footprint claim safe, quality claim gated on E2 TFH verdict) |
+
+---
+
+*Next EXP-ID: EXP-021*
