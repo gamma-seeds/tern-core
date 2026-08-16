@@ -19,7 +19,7 @@ a non-ternary tensor fed here fails loudly rather than packing lossily.
 Symmetry is exploited: the scale alone reconstructs the weight, so no
 bias/zero-point is stored (the MLX affine bias term is dropped).
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

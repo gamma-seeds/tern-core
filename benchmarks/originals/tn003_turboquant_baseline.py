@@ -44,7 +44,7 @@ Wall-clock estimate per Phi-4 measurement run:
 - Perplexity (default ON; ``--no-perplexity`` to skip): ~10-15 min
 - Total: ~30-45 min full / ~5-10 min ``--no-perplexity`` smoke
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

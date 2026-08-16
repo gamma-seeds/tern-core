@@ -26,7 +26,7 @@ mapping P145's multi-controlled-operation / indexing-vector-conditional
 firing pattern onto MoE inference, dispatched across the P146
 prepare-and-launch boundary.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

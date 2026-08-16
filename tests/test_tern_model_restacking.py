@@ -13,7 +13,7 @@ These tests bypass ``convert.py:full_convert`` and exercise the reader
 directly via ``TernModelWriter`` calls — failures here localise to the
 reader's restacking logic without integration noise.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

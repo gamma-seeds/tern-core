@@ -8,7 +8,7 @@ CoreML emitter producing valid MIL at block_size=128, torch forward
 parity against the dequantised reference, and the array-valued scale
 validator's loud raise on a degenerate group.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

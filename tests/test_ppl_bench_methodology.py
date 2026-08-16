@@ -12,7 +12,7 @@ to exercise the methodology surface in <10s without network or model
 download. An additional ``@pytest.mark.slow`` integration test exercises
 the same protocol against a real small model — opt-in via ``pytest -m slow``.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

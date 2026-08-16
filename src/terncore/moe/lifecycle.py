@@ -19,7 +19,7 @@ overrides :meth:`prepare` to page an expert in (UNKNOWN/UNSURE → SURE) and
 adds cache/eviction transitions (SURE → UNSURE). The interface is shaped now
 so M2 extends rather than replaces it.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

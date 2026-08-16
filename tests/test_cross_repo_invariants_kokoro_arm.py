@@ -22,7 +22,7 @@ is at rest per build-closure stand-down; the upstream
 A future integration³ housekeeping commit may activate the upstream
 TW-N stubs' cross-repo arms post-attachment.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

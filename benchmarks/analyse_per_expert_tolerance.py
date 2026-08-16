@@ -16,7 +16,7 @@ Usage:
       --output-dir benchmarks/<phase_dir>/ \\
       --llama70b-manifest /path/to/llama70b.tern-model  # optional external ref
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 from __future__ import annotations
 

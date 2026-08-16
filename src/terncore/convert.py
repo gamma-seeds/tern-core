@@ -22,7 +22,7 @@ Usage:
         --adapter gemma4 --dry-run --output /tmp/dryrun
 
 Copyright (c) 2025 Synapticode Co., Ltd.
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

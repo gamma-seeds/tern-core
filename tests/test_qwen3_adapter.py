@@ -9,7 +9,7 @@ against the real Bonsai tensor names and guards the dense/MoE routing
 boundary (dense Qwen3 must not resolve to the qwen3_moe adapter, and
 vice-versa).
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

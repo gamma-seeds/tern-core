@@ -13,7 +13,7 @@ The PPL is the MODEL BASELINE (post-load), not KV-compression quality.
 
 This is an honest replication of the original measurement methodology.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

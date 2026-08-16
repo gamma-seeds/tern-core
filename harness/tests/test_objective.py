@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """Tests for harness.objective — pure Python, no MLX deps.
 
 The objective takes ProjectionResult instances as input but only

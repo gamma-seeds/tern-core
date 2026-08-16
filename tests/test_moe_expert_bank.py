@@ -11,7 +11,7 @@ The slow test loads the real Qwen3-30B-A3B artefact off the archive and
 verifies 100% manifest coverage + reconstruction fidelity. Opt-in via
 ``pytest -m slow``; skips cleanly when the archive is not mounted.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

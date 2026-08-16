@@ -25,7 +25,7 @@ are the declarative hooks those ops will read, exactly as
 ``coreml_export`` already gates ``has_qk_norm`` / ``activation`` off its
 preset dicts today.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

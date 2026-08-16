@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """Tests for harness.epistemic_state — pure-Python, no ML deps.
 
 The headline test is ``test_cross_repo_string_match``: it imports

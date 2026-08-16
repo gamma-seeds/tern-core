@@ -13,7 +13,7 @@ Quality gate: argmax match rate (does the next-token prediction change?).
 - 93% = floor (no sweep point below this)
 - 99% = bell mean target (average across tokens)
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

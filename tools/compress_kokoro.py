@@ -39,7 +39,7 @@ Defaults align with the canonical model-library convention:
     output: ~/synapticode/model-library/Kokoro-82M/
             kokoro_82m_ternary_v0.6.0.tern-model
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

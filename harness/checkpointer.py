@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 # Patent alignment: candidate new provisional — HarnessCheckpointer³
 # training→inference continuity (flag to Rod).
 """

@@ -16,7 +16,7 @@ must not overlap. Outputs land under models/compressed/qwen3-30b-a3b/sweep/.
 Usage:
     HF_HUB_OFFLINE=1 python benchmarks/sweep_qwen3_threshold_coherence_2026-05-28.py
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

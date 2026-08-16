@@ -37,7 +37,7 @@ components. Weight classification reuses the standard substring +
 dimensionality policy: embeddings / LM head / norms / ``z_L_init`` →
 FP16-retain; remaining 2-D block weights → ternary-eligible.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

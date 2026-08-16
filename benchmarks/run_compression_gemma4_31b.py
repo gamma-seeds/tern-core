@@ -18,7 +18,7 @@ Wall-clock estimate: ~45-60 min on M4 Pro (60 layers vs 30 for 26B-A4B,
 roughly 2x tensor count post-classification at 410 + protected; offset by
 no per-expert slicing overhead).
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

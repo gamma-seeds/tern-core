@@ -26,7 +26,7 @@ sweep produces a valid manifest with termination_reason inferred from the
 point set (incomplete | ceiling_crossed | hook_construction_failure |
 ppl_eval_failure | grid_exhausted).
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

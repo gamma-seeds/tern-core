@@ -6,7 +6,7 @@ weight names to tern-core's internal weight schema.  Covers all Llama
 family models including Mistral, CodeLlama, and TinyLlama which share
 the same architecture.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

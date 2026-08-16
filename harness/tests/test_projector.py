@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """Tests for harness.projector — TernaryProjector MLX implementation.
 
 The headline test is ``test_numerical_agreement_with_ste_quantize``:

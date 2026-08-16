@@ -16,7 +16,7 @@ distribution — locally via ``pip install -e ~/synapticode/agents/integration3`
 in CI via a separate checkout + ``pip install -e`` of
 ``gamma-seeds/integration3`` at the same pin.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

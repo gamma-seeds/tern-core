@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """Decision³ LedgerEntry³ bootstrap for the Kokoro 82M tern-core
 attachment Phase 0 brief — fourth canonical LedgerEntry³ record overall
 (first downstream-consumer entry; bootstraps post-build ledger continuity

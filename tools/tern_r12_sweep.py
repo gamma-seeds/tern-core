@@ -31,7 +31,7 @@ mechanism described in R12 v1.1 §6.1 is vacuous; the theoretical ratio
 captures the deployment-relevant compression. See per-point notes for the
 full rationale.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

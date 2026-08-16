@@ -8,7 +8,7 @@ gemma3 adapter migrates from a 2-bucket (vision/language) emission
 to the 4-bucket vocab (vision/audio/projector/language) by splitting
 multimodal projector patterns out of its vision pattern list.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

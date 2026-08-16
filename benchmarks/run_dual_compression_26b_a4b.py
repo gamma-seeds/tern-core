@@ -29,7 +29,7 @@ Usage:
 Wall-clock: ~2-3 hours per compression, ~4-6 hours total.
 Memory: ~7 GB peak (5 GB shard load + 2 GB stacked-parent in-flight).
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

@@ -12,7 +12,7 @@ These tests build a tiny synthetic Gemma 4 fixture under ``tmp_path``
 (no HuggingFace downloads), run it through ``full_convert``, and inspect
 the resulting ``.tern-model`` manifest.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

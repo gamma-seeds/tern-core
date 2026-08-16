@@ -14,7 +14,7 @@ Format:
 
 Part of tern-core v0.6.0: mixed ternary/INT4 quantisation pipeline.
 
-Copyright (c) 2025 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

@@ -27,7 +27,7 @@ This is the *dense* adapter. The sparse ``Qwen3MoeForCausalLM`` variant
 (per-expert FFN, router as ``mlp.gate.weight``) is served by
 ``terncore.adapters.qwen3_moe`` and must not route here.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

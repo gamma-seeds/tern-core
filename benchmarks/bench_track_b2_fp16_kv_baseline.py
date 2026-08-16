@@ -6,7 +6,7 @@ itself: byte size, memory footprint, and generation throughput.
 
 This converts Icon 1's "1×" from definitional to MEASURED.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

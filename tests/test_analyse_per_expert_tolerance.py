@@ -8,7 +8,7 @@ Tests both balanced and imbalanced group cases. Uses mock manifest entries
 - JSON output schema parses cleanly
 - Mann-Whitney robustness to unequal group sizes (imbalanced case)
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 import json
 import sys

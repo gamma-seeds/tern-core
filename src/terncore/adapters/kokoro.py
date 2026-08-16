@@ -48,7 +48,7 @@ Estimated compressed footprint:
   - Total:   ~20.2 MB main-model + ~1.5 MB 6 demo voices FP16 = ~21.7 MB
   - F-8 ceiling: ≤22 MB demo artefact (OQ-6 ratification) — within band
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

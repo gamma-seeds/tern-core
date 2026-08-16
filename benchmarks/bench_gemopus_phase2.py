@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright (c) 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """
 bench_gemopus_phase2.py — Gemopus-4-E4B-it / Gemma 4 E4B-it phase-2 benchmark harness.
 

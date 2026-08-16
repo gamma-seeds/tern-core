@@ -5,7 +5,7 @@ Gemma 4 12B-it ships a single ``model.safetensors`` with no
 ``model.safetensors.index.json``. The loader must synthesize a
 weight_map from the file header rather than raising.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 import pytest

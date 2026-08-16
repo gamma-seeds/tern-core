@@ -3,7 +3,7 @@ Tests for the Expert Lifecycle Component (Milestone 1 Stage 4, SURE-only).
 
 Pure unit tests over a hand-built bank — no model assembly, no archive.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

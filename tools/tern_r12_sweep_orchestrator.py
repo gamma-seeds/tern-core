@@ -28,7 +28,7 @@ EXPLICITLY to each subprocess via --b-mse-values "<one>" (NOT via --smoke,
 which would hardcode b_mse=[4,2] inside each subprocess and silently
 re-expand the per-point invocation back to multi-point).
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

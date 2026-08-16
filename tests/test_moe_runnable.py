@@ -11,7 +11,7 @@ weights, so the only delta is packed-matmul vs dense rounding.
 
 All fast (tiny dims); no archive dependency.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

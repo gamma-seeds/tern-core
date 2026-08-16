@@ -41,7 +41,7 @@ Default ``pytest -m "not slow"`` skips this entire file. Opt-in via
 ``pytest -m slow``. Wall-clock estimate: ~10-30 min per model
 sequential (HF base load + load_packed_model + smoke probe).
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

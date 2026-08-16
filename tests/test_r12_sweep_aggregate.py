@@ -14,7 +14,7 @@ Coverage:
   - recommended_operating_point null-stub: no qualifying points
   - point ordering: out-of-order JSON filenames re-sort by point_index
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

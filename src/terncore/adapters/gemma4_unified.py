@@ -32,7 +32,7 @@ Text-tower projection names match Llama / the base Gemma 4 adapter
 (q/k/v/o + gate/up/down + the gemma4 norms + ``layer_scalar``), so the
 base classification and stacked-expert (no-op here) logic are inherited.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

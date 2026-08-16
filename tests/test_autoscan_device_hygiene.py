@@ -18,7 +18,7 @@ The tests deliberately avoid real model loads. Each test exercises a
 single decision surface (load-kwargs helper, device validator, cache
 schema, ScanResult round-trip).
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

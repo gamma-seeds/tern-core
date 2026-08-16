@@ -9,7 +9,7 @@ Session 3 per-expert slicing rework adds:
   ``_extract_expert_idx`` helper populates ``WeightClassification.expert_idx``
   from synthesised per-expert names.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

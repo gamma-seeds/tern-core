@@ -46,7 +46,7 @@ Usage:
     HF_HUB_OFFLINE=1 python benchmarks/sensitivity_scan_moe_2026-05-28.py \\
         --targets qwen3-30b-a3b,phi-4 --mode per_channel
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

@@ -10,7 +10,7 @@ inference benchmarking on CPU/ANE/GPU compute units.
 
 Part of tern-core v0.6.0 compression stack.
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

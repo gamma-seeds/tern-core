@@ -6,7 +6,7 @@ names via ``importlib.import_module`` against ``_KNOWN_ADAPTERS`` and
 raises ``ValueError`` on unknown names with a message that lists the
 known set.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

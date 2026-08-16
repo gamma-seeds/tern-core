@@ -18,7 +18,7 @@ export uses **no ANE ops** — CPU_AND_NE runs on CPU. The CPU_AND_NE
 energy/stability win is CPU-vs-GPU, not ANE. See the Phase-4
 OPTION4_ANE_PLACEMENT diagnosis; do not read low CPU_AND_NE power as ANE.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 import argparse

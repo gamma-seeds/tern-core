@@ -27,7 +27,7 @@ Wall-clock estimate: ~45-90 min on M4 Pro. Qwen3 has 18,624 ternary
 entries (vs Gemma 4 26B-A4B's ~7,875), so per-tensor processing
 dominates wall-clock — likely longer than 26B-A4B's 42 min.
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

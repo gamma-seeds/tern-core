@@ -27,7 +27,7 @@ skeleton (no 57 GB expert allocation) with attention as
 the protected tensors, and each MoE block swapped for a
 :class:`TernaryMoEBlock` over the shared bank.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

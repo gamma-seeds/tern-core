@@ -14,7 +14,7 @@ Reference math sources (pinned during Phase 2 recon):
 - RoPE apply / rotate_half: ``modeling_qwen3.apply_rotary_pos_emb``
 - QK-Norm: ``modeling_qwen3.Qwen3RMSNorm`` (plain-weight, eps-in-rsqrt)
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

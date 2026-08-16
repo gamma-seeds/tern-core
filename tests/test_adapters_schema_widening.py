@@ -9,7 +9,7 @@ Group A item A3 adds optional fields to ``AdapterInfo`` and
 inherit the ``None`` defaults unchanged — no behaviour change for
 non-MoE, non-hybrid models.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

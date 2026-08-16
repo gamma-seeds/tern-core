@@ -14,7 +14,7 @@ architecture is not in the adapter's allow-list raises
 :class:`ArchitectureMismatch` at convert-time rather than after
 compression has run to completion.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

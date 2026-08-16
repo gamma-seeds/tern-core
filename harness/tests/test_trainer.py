@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """Tests for harness.trainer — TernaryTrainer master loop.
 
 Uses a trivial differentiable loss_fn so the trainer can be exercised

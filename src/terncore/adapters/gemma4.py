@@ -21,7 +21,7 @@ Key differences from Llama:
   ``post_feedforward_layernorm_1/2``, ``layer_scalar``
 - RMSNorm does NOT add +1.0 shift (unlike Gemma 3)
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

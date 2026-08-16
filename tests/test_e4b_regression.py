@@ -21,7 +21,7 @@ When enabled it re-runs ``full_convert`` against the source and diffs
 the resulting manifest against the baseline. This is the canonical
 heavy validation banked for Substep 2g manual execution.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

@@ -15,7 +15,7 @@ Architecture notes:
 - Language weights prefixed with ``language_model.`` in multimodal
 - No MoE, no per-layer embeddings, no layer_scalar (unlike Gemma 4)
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

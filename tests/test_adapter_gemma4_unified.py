@@ -6,7 +6,7 @@ weight-classification contract that matters for a text-only ternary pass:
 the language_model decoder tower is ternary-eligible while every inline
 encoder-free multimodal embedder tensor is FP16-retained.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 import pytest

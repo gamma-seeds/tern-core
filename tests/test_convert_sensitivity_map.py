@@ -9,7 +9,7 @@ helper accepts an explicit caller-supplied path and supports both the new
 sensitivity-scan schema (``layers``) and the legacy dryrun schema
 (``tolerance_scan``).
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

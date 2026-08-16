@@ -10,7 +10,7 @@ the expected layer census, the per-group equivalence gate passes
 bit-exact, and the written .tern-model reconstructs to the source
 weights within FP16 tolerance.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

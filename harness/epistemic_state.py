@@ -1,4 +1,4 @@
-# Copyright 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+# Copyright 2026 Robert Lakelin. Inventor: Robert Lakelin.
 # Patent alignment: candidate new provisional — TFH composite loss
 # function and EpistemicAnnotator³ weight annotation (flag to Rod).
 """

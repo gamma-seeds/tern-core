@@ -8,7 +8,7 @@ constexpr_blockwise_shift_scale (iOS 18+); no re-quantisation occurs.
 
 Part of tern-core v0.6.0 compression stack — Layer 4 (CoreML/ANE export).
 
-Copyright (c) 2025 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

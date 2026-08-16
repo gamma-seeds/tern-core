@@ -27,7 +27,7 @@ Wall-clock estimate: ~25-40 min on M4 Pro. Phi-4 is ~14B (smaller
 than 26B-A4B's 26B); only 160 ternary entries (vs 7,875 for 26B-A4B);
 per-tensor processing should dominate but with far fewer entries.
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

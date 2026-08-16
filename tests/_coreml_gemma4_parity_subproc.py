@@ -12,7 +12,7 @@ RoPE with partial-rotary 0.25 (full), q/k/v-norm (v_norm with_scale=False),
 scaling=1.0, causal GQA. Tiny random config — no model download.
 
 Usage: python _coreml_gemma4_parity_subproc.py <out.json>
-Copyright (c) 2026 Gamma Seeds Pte Ltd. Inventor: Robert Lakelin.
+Copyright (c) 2026 Robert Lakelin. Inventor: Robert Lakelin.
 """
 from __future__ import annotations
 import sys, json, math, numpy as np, torch

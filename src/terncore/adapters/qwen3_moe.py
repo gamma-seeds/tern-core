@@ -29,7 +29,7 @@ Qwen3MoE quirks vs Gemma 4 26B-A4B:
   per-layer entries (3 per expert instead of 2) but uniform
   per-component sparsity measurement.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

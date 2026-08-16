@@ -17,7 +17,7 @@ See also: python -m terncore.pack_g128 (equivalent entry point).
 The ``--adapter`` defaults to ``qwen3``; any dense adapter that
 classifies 2-D block projections as ternary-eligible works.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

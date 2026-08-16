@@ -10,7 +10,7 @@ the M4 Pro 64 GB unified-memory envelope, and provides the substrate the
 Stage 3 custom MoE block routes through (P145 indexing-vector-conditional
 firing; P146 prepare-and-launch dispatch).
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from terncore.moe.expert_bank import (

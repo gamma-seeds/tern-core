@@ -19,7 +19,7 @@ Two code paths:
 Output: one JSON record per run conforming to ``wikitext2_ppl/1.0``
 schema (R7-A §8) under ``results/wikitext2_ppl/``.
 
-Copyright (c) 2025-2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025-2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

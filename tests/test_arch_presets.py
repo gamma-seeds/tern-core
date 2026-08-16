@@ -11,7 +11,7 @@ during Q1, and guard the Llama path against regression.
 Runtime QK-Norm / YaRN operators are deferred to Phase 2; this suite
 asserts the declarative fields only.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

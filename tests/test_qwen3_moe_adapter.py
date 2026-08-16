@@ -8,7 +8,7 @@ the substantive quirk being the router/expert-gate discrimination
 via the trailing-period substring pattern ``"mlp.gate."`` (cf.
 ``pattern_substring_pattern_discrimination_v1``).
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

@@ -13,7 +13,7 @@ The graph code here is the validated Route-B builder (parity-gated against HF
 
 E4B is dense (enable_moe_block=False) — MoE is the 26B delta and is not built here.
 
-Copyright (c) 2026 Gamma Seeds Pte Ltd. All rights reserved. Inventor: Robert Lakelin.
+Copyright (c) 2026 Robert Lakelin. All rights reserved. Inventor: Robert Lakelin.
 """
 from __future__ import annotations
 

@@ -4,7 +4,7 @@ Base class for architecture adapters.
 Adapters translate between a HuggingFace model's weight naming
 conventions and tern-core's internal conversion schema.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

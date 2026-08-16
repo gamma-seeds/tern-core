@@ -8,7 +8,7 @@ method, ``get_protection_list``, is dead code in the codebase and is
 removed from all adapters with no replacement; a regression-prevention
 test guards against accidental re-introduction.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

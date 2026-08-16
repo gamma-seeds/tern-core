@@ -12,7 +12,7 @@ initialiser ``model.z_L_init``. This suite pins the weight-classification
 policy against the real fused tensor names + shapes, the H/L stack
 tagging, and the architecture routing boundary.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

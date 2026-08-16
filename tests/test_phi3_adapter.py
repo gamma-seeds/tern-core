@@ -7,7 +7,7 @@ mirrors LlamaAdapter's classification logic, validated against
 April 2026 prior production compression of Phi-4 via the
 ``--adapter llama`` route.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

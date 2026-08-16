@@ -25,7 +25,7 @@ Falsifier coverage:
 Test naming discipline (per integration³ Wave 1 Dispatch Addendum 2
 §3 element 3) — vocabulary disambiguation in test method identifiers.
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations

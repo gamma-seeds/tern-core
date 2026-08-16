@@ -29,7 +29,7 @@ architecture allow-list for ``validate_architecture`` per the
 post-Group-A allow-list discipline (description strings are
 aspirational, allow-lists are gates).
 
-Copyright (c) 2025–2026 Gamma Seeds Pte Ltd. All rights reserved.
+Copyright (c) 2025–2026 Robert Lakelin. All rights reserved.
 """
 
 from __future__ import annotations
